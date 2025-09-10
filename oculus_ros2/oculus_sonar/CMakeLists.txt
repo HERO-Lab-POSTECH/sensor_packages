@@ -1,0 +1,178 @@
+# CMakeLists.txt
+# Date: 250721
+# Author: seungmin kim
+# Description: Build configuration for oculus_sonar ROS2 package. Handles dependencies, component registration, and installation.
+#
+# TODO: Port sonar_image_proc to ROS2 if needed for postprocessing
+# TODO: Port g3log_ros to ROS2 if needed for logging
+# TODO: Implement ReprocessOculusRawData component and executable
+
+cmake_minimum_required(VERSION 3.8)
+project(oculus_sonar)
+
+# Default to C++17
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+
+# Find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(marine_acoustic_msgs REQUIRED)
+find_package(cv_bridge REQUIRED)
+find_package(image_transport REQUIRED)
+find_package(liboculus REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system)
+# TODO: Port sonar_image_proc to ROS2 if needed for postprocessing
+# find_package(sonar_image_proc REQUIRED)
+# TODO: Port g3log_ros to ROS2 if needed for logging
+# find_package(g3log_ros REQUIRED)
+
+# For message generation
+find_package(apl_msgs REQUIRED)
+find_package(oculus_sonar_msgs REQUIRED)
+
+# Include directories
+include_directories(include)
+include_directories(${OpenCV_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../liboculus/include)
+include_directories(${CMAKE_INSTALL_PREFIX}/include)
+include_directories(${CMAKE_BINARY_DIR}/marine_acoustic_msgs/rosidl_generator_cpp)
+include_directories(${CMAKE_SOURCE_DIR}/build/marine_acoustic_msgs/rosidl_generator_cpp)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/../marine_acoustic_msgs/rosidl_generator_cpp)
+
+# Component library (replaces nodelet)
+add_library(oculus_driver_component SHARED
+  src/oculus_driver_component.cpp
+  # TODO: Implement ReprocessOculusRawData component
+  # src/reprocess_oculus_raw_data.cpp
+)
+
+target_include_directories(oculus_driver_component PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  ${liboculus_INCLUDE_DIRS}
+)
+
+ament_target_dependencies(oculus_driver_component
+  rclcpp
+  rclcpp_components
+  std_msgs
+  sensor_msgs
+  marine_acoustic_msgs
+  cv_bridge
+  image_transport
+  liboculus
+  OpenCV
+  Boost
+  apl_msgs
+  oculus_sonar_msgs
+)
+
+# Link with generated messages
+target_link_libraries(oculus_driver_component 
+  # rosidl_get_typesupport_target 등 rosidl_로 시작하는 모든 함수 호출 완전 삭제
+)
+
+# Register components (replaces nodelet plugin)
+rclcpp_components_register_nodes(oculus_driver_component 
+  "oculus_sonar::OculusDriver"
+  # TODO: Implement ReprocessOculusRawData component
+  # "oculus_sonar::ReprocessOculusRawData"
+)
+
+# Optional: create standalone executable too
+rclcpp_components_register_node(oculus_driver_component
+  PLUGIN "oculus_sonar::OculusDriver"
+  EXECUTABLE oculus_driver_node
+)
+
+# TODO: Implement ReprocessOculusRawData component and executable
+# # Reprocess raw data executable
+# add_executable(reprocess_oculus_raw_data src/reprocess_oculus_raw_data_node.cpp)
+# target_include_directories(reprocess_oculus_raw_data PUBLIC
+#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#   $<INSTALL_INTERFACE:include>
+# )
+# ament_target_dependencies(reprocess_oculus_raw_data
+#   rclcpp
+#   rclcpp_components
+# )
+# target_link_libraries(reprocess_oculus_raw_data 
+#   oculus_driver_component
+#   ${cpp_typesupport_target}
+# )
+
+# Install
+install(TARGETS oculus_driver_component
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+install(TARGETS 
+  # TODO: Uncomment when ReprocessOculusRawData is implemented
+  # reprocess_oculus_raw_data
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY include/
+  DESTINATION include
+)
+
+install(DIRECTORY 
+  launch
+  config
+  DESTINATION share/${PROJECT_NAME}
+)
+
+# Install plugin description
+install(FILES plugins.xml
+  DESTINATION share/${PROJECT_NAME}
+)
+
+# ping_to_sonar_image.hpp 설치 추가
+install(FILES
+  include/oculus_sonar/ping_to_sonar_image.hpp
+  DESTINATION include/${PROJECT_NAME}
+)
+
+# Export dependencies for downstream packages
+# ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_dependencies(
+  rclcpp
+  rclcpp_components
+  std_msgs
+  sensor_msgs
+  marine_acoustic_msgs
+  cv_bridge
+  image_transport
+  liboculus
+  OpenCV
+  Boost
+)
+
+ament_export_include_directories(include)
+ament_export_libraries(oculus_driver_component)
+
+# Testing
+#if(BUILD_TESTING)
+#  find_package(ament_lint_auto REQUIRED)
+#  ament_lint_auto_find_test_dependencies()
+#  
+#  find_package(ament_cmake_gtest REQUIRED)
+#  ament_add_gtest(oculus_sonar_test test/unit/main.cpp)
+#  if(TARGET oculus_sonar_test)
+#    target_link_libraries(oculus_sonar_test oculus_driver_component)
+#  endif()
+#endif()
+
+ament_package()

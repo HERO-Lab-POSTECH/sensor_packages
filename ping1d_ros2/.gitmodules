@@ -1,0 +1,4 @@
+[submodule "ping1d_sonar/ping-python"]
+	path = ping1d_sonar/ping-python
+	url = https://github.com/bluerobotics/ping-python.git
+	branch = deployment

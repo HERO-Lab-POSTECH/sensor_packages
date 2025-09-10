@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<package format="3">
+  <!--
+    package.xml
+    Date: 250721
+    Author: seungmin kim
+    Description: Package manifest for oculus_sonar ROS2 package.
+    TODO: Port sonar_image_proc and g3log_ros to ROS2 if needed.
+  -->
+  <name>oculus_sonar</name>
+  <version>2.0.0</version>
+  <description>ROS2 Package to interface with a Blueprint Subsea Oculus imaging sonar</description>
+
+  <maintainer email="amarburg@uw.edu">A. Marburg</maintainer>
+  <license>MIT</license>
+
+  <!-- Build tool -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Core ROS2 dependencies -->
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+
+  <!-- Message generation -->
+  <build_depend>rosidl_default_generators</build_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+
+  <!-- Custom message dependencies -->
+  <depend>marine_acoustic_msgs</depend>
+  <depend>apl_msgs</depend>
+  <depend>oculus_sonar_msgs</depend>
+
+  <!-- Image processing -->
+  <depend>cv_bridge</depend>
+  <depend>image_transport</depend>
+  <!-- TODO: Port sonar_image_proc to ROS2 if needed for postprocessing -->
+  <!-- <depend>sonar_image_proc</depend> -->
+
+  <!-- Sonar-specific dependencies -->
+  <depend>liboculus</depend>
+
+  <!-- TODO: Port g3log_ros to ROS2 if needed for logging -->
+  <!-- <depend>g3log_ros</depend> -->
+
+  <!-- Testing dependencies -->
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+    <!-- Register components plugin -->
+    <rclcpp_components plugin="${prefix}/plugins.xml" />
+  </export>
+
+</package>

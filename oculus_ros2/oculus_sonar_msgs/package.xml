@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <!--
+    package.xml
+    Date: 250721
+    Author: seungmin kim
+    Description: Package manifest for oculus_sonar_msgs ROS2 message package.
+    TODO: Add further dependencies if needed.
+  -->
+  <name>oculus_sonar_msgs</name>
+  <version>0.0.0</version>
+  <description>Custom messages for Oculus Sonar (ROS2)</description>
+  <maintainer email="luckkim123@gmail.com">root</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>rosidl_default_generators</buildtool_depend>
+  
+  <depend>std_msgs</depend>
+  
+  <exec_depend>rosidl_default_runtime</exec_depend>
+  
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

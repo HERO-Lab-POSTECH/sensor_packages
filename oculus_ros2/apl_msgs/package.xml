@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>apl_msgs</name>
+  <version>1.0.0</version>
+  <description>The apl_msgs package (ROS1/ROS2)</description>
+
+  <maintainer email="lindzey@uw.edu">Laura Lindzey</maintainer>
+  <maintainer email="amarburg@uw.edu">Aaron Marburg</maintainer>
+
+  <license>BSD-3-clause</license>
+
+  <!-- Stefano Suman and Ian Vaughn at WHOI wrote the original RawData.msg -->
+  <author email="lindzey@uw.edu">Laura Lindzey</author>
+
+  <buildtool_depend condition="$ROS_VERSION == 1">catkin</buildtool_depend>
+  <buildtool_depend condition="$ROS_VERSION == 2">ament_cmake</buildtool_depend>
+  <buildtool_depend condition="$ROS_VERSION == 2">rosidl_default_generators</buildtool_depend>
+
+  <build_depend condition="$ROS_VERSION == 1">rospy</build_depend>
+  <build_depend condition="$ROS_VERSION == 1">message_generation</build_depend>
+  <build_depend condition="$ROS_VERSION == 1">genmypy</build_depend>
+  <build_depend condition="$ROS_VERSION == 2">rclpy</build_depend>
+  <build_depend>std_msgs</build_depend>
+
+  <build_export_depend condition="$ROS_VERSION == 1">message_generation</build_export_depend>
+  <build_export_depend condition="$ROS_VERSION == 2">rclpy</build_export_depend>
+  <build_export_depend>std_msgs</build_export_depend>
+
+  <exec_depend condition="$ROS_VERSION == 1">rospy</exec_depend>
+  <exec_depend condition="$ROS_VERSION == 1">message_runtime</exec_depend>
+  <exec_depend condition="$ROS_VERSION == 1">genmypy</exec_depend>
+  <exec_depend condition="$ROS_VERSION == 2">rosidl_default_runtime</exec_depend>
+  <exec_depend condition="$ROS_VERSION == 2">rclpy</exec_depend>
+
+  <member_of_group condition="$ROS_VERSION == 2">rosidl_interface_packages</member_of_group>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+    <member_of_group>rosidl_interface_packages</member_of_group>
+  </export>
+</package>

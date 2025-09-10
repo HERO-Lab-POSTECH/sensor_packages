@@ -1,0 +1,43 @@
+# oculus_params.yaml
+# Date: 250721
+# Author: seungmin kim
+# Description: ROS2 parameter configuration for Oculus sonar driver. Provides default and alternative parameter settings for the Oculus sonar node.
+
+oculus:
+  oculus_sonar:
+    ros__parameters:
+      # Connection settings
+      ip_address: "auto"           # Sonar IP address ("auto" for auto-detect)
+      frame_id: "oculus"           # Frame ID for published messages
+      # Sonar configuration
+      range: 2.0                    # Range (meters), valid: 0-40
+      gain: 100.0                   # Gain (percentage), valid: 1-100
+      gamma: 200                    # Gamma correction, valid: 0-255 (default: 200)
+      ping_rate: 3                  # 0=Normal, 1=High, 2=Highest, 3=Low, 4=Lowest, 5=Standby (default: 3)
+      freq_mode: 2                  # 1=LowFrequency, 2=HighFrequency
+      data_size: "8bit"             # "8bit", "16bit", "32bit" (default: "8bit")
+      num_beams: 1                  # 0=256beams, 1=512beams
+      # Flags
+      send_range_as_meters: true    # If true, range is in meters
+      send_gain: true               # If true, send gain
+      send_simple_return: true      # If true, send simple return message
+      gain_assistance: false        # If true, enable gain assistance
+
+# Alternative flat configuration (without namespace)
+# Use this if you want to load parameters directly to the node
+# @todo: Uncomment and use if direct node parameter loading is preferred.
+# /**:
+#   ros__parameters:
+#     ip_address: "auto"
+#     frame_id: "oculus"
+#     range: 2.0
+#     gain: 100.0
+#     gamma: 127
+#     ping_rate: 0
+#     freq_mode: 2
+#     data_size: 1
+#     num_beams: 1
+#     send_range_as_meters: true
+#     send_gain: true
+#     send_simple_return: true
+#     gain_assistance: false

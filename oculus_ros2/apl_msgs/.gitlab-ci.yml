@@ -1,0 +1,38 @@
+stages:
+  - lint
+  - build
+
+variables:
+  PRECOMMIT_IMAGE: v3.0.0
+
+sast:
+  stage: lint
+include:
+  - template: Security/SAST.gitlab-ci.yml
+
+pre-commit:
+  stage: lint
+  image: dchevallier/pre-commit:$PRECOMMIT_IMAGE
+  script:
+    - git config --global --add safe.directory $CI_PROJECT_DIR
+    - pre-commit install
+    - pre-commit run --all-files
+  except:
+    - tags
+
+industrial_ci:
+  stage: build
+  parallel:
+    matrix:
+      - CI_ROS_DISTRO:
+        - noetic
+        - humble
+        - jazzy
+        - rolling
+  image: docker:git
+  services:
+    - docker:dind
+  before_script:
+    - apk add --update bash coreutils tar
+    - git clone --quiet --depth 1 https://github.com/ros-industrial/industrial_ci .industrial_ci -b master
+  script: .industrial_ci/gitlab.sh ROS_DISTRO=$CI_ROS_DISTRO

@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>liboculus</name>
+  <version>0.0.1</version>
+  <description>A ROS version of the Oculus sonar codebase</description>
+
+  <maintainer email="amarburg@uw.edu">Aaron Marburg</maintainer>
+  <author email="amarburg@uw.edu">Aaron Marburg</author>
+
+  <license>BSD</license>
+
+  <buildtool_depend condition="$ROS_VERSION == 1">catkin</buildtool_depend>
+  <buildtool_depend condition="$ROS_VERSION == 2">ament_cmake</buildtool_depend>
+
+  <depend>g3log_ros</depend>
+
+  <export>
+    <build_type condition="$ROS_VERSION == 1">catkin</build_type>
+    <build_type condition="$ROS_VERSION == 2">ament_cmake</build_type>
+  </export>
+
+</package>

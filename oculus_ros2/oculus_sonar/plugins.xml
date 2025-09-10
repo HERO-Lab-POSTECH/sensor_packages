@@ -1,0 +1,20 @@
+<!--
+  plugins.xml
+  Date: 250721
+  Author: seungmin kim
+  Description: Plugin registration for oculus_sonar ROS2 package.
+  TODO: Implement ReprocessOculusRawData component.
+-->
+<library path="oculus_driver_component">
+  <class name="oculus_sonar::OculusDriver" type="oculus_sonar::OculusDriver" base_class_type="rclcpp::Node">
+    <description>
+      A ROS2 component driver for Oculus sonar.
+    </description>
+  </class>
+  <!-- TODO: Implement ReprocessOculusRawData component -->
+  <!-- <class name="oculus_sonar::ReprocessOculusRawData" type="oculus_sonar::ReprocessOculusRawData" base_class_type="rclcpp::Node">
+    <description>
+      Subscribes to oculus_sonar::msg::RawData and publishes SonarImages.
+    </description>
+  </class> -->
+</library>

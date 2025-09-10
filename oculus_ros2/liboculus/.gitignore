@@ -1,0 +1,7 @@
+.fips-*
+*.dat
+doc/
+.DS_Store
+build/
+
+.vscode/

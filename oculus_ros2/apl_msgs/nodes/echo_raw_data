@@ -1,0 +1,36 @@
+#!/usr/bin/env python
+"""
+Utility script for pretty-printing raw data coming to/from hardware.
+(Only works on ASCII data)
+"""
+
+import argparse
+import rospy
+from apl_msgs.msg import RawData
+
+
+def main(topic):
+    rospy.init_node("echo_raw_data")
+    _ = rospy.Subscriber(topic, RawData, cb)
+    rospy.spin()
+
+
+def cb(msg):
+    direction = ""
+    if msg.direction == msg.DATA_IN:
+        direction = "IN:  "
+    elif msg.direction == msg.DATA_OUT:
+        direction = "OUT: "
+    else:
+        direction = "??:  "
+
+    msg = "".join(chr(ii) for ii in msg.data)
+
+    print(direction + msg.strip())
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("topic", help="Raw data topic to translate into ASCII")
+    args = parser.parse_args()
+    main(args.topic)
