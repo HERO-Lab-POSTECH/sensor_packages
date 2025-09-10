@@ -52,7 +52,7 @@ def generate_launch_description():
         # Launch arguments
         DeclareLaunchArgument(
             'device',
-            default_value='/dev/ping',  # Original default value from source code
+            default_value='/dev/ttyUSB0',  # Original default value from source code
             description='Serial device for Ping1D (e.g., /dev/ttyUSB0, /dev/ping)'
         ),
         DeclareLaunchArgument(
