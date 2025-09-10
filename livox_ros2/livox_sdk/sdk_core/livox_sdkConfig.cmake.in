@@ -1,0 +1,13 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# Include the targets file
+include("${CMAKE_CURRENT_LIST_DIR}/livox_sdkTargets.cmake")
+
+# Set variables for backward compatibility
+set(livox_sdk_LIBRARIES livox_lidar_sdk_shared)
+set(livox_sdk_INCLUDE_DIRS "@PACKAGE_INCLUDE_DIR@")
+set(livox_sdk_LIBRARY_DIRS "@PACKAGE_LIB_DIR@")
+
+check_required_components(livox_sdk)

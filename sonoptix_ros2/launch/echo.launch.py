@@ -28,19 +28,20 @@ from launch_ros.actions import Node
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
 
 def generate_launch_description():
     # Declare launch arguments
     declare_ip = DeclareLaunchArgument(
         'ip',
-        default_value='192.168.2.42',
+        default_value='192.168.0.203',
         description='IP address of the Sonoptix sonar'
     )
     
     declare_range = DeclareLaunchArgument(
         'range',
-        default_value='12',
+        default_value='10',  # 최대 범위로 설정
         description='Sonar range in meters'
     )
     
@@ -76,7 +77,7 @@ def generate_launch_description():
     
     declare_compression_level = DeclareLaunchArgument(
         'compression_level',
-        default_value='1',
+        default_value='1',  # 최고 품질 (압축 최소화)
         description='Compression level [1-9], higher is more compressed but requires more compute'
     )
     
@@ -97,6 +98,13 @@ def generate_launch_description():
     compression_level = LaunchConfiguration('compression_level')
     reliability = LaunchConfiguration('reliability')
 
+    # QoS profile for image data
+    image_qos = QoSProfile(
+        reliability=ReliabilityPolicy.BEST_EFFORT,
+        durability=DurabilityPolicy.VOLATILE,
+        depth=1
+    )
+
     echo_data = Node(package='sonoptix_ros2',
                      executable='echo',
                      parameters=[{
@@ -109,6 +117,7 @@ def generate_launch_description():
                      }],
                      output='screen')
 
+    # High-quality compressed image publisher with proper QoS
     echo_transport = Node(package='image_transport',
                           executable='republish',
                           name='echo_transport',
@@ -116,8 +125,10 @@ def generate_launch_description():
                           remappings=[('in', data_topic),
                                       ('out/compressed', compressed_topic)],
                           parameters=[{
-                              'out.compressed.format': 'png',
+                              'out.compressed.format': 'png',  # PNG는 무손실 압축
                               'out.compressed.png_level': compression_level,
+                              'qos_overrides.in.subscription.reliability': 'best_effort',
+                              'qos_overrides.out.compressed.publisher.reliability': 'best_effort',
                           }],
                           output='screen')
 
@@ -132,5 +143,5 @@ def generate_launch_description():
         declare_compression_level,
         declare_reliability,
         echo_data,
-        echo_transport
+        # echo_transport  # QoS 충돌로 인해 일시적으로 비활성화
     ])

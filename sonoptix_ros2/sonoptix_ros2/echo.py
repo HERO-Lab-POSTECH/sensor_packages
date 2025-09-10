@@ -56,8 +56,8 @@ class EchoNode(Node):
         # --- Parameters ---
         # Declare and get parameters for the node.
         params = {
-            'range': [50, int],
-            'ip': ['192.168.2.42', str],
+            'range': [50, int],  # 최대 범위로 설정
+            'ip': ['192.168.0.203', str],  # 현재 센서 IP로 업데이트
             'tx_mode': ['auto', str],
             'power_state': [True, bool],
             'topic': ['/sensor/sonar/sonoptix/data', str],
@@ -78,7 +78,12 @@ class EchoNode(Node):
                 qos.QoSPolicyKind.RELIABILITY,
                 )
         )
-        SENSOR_QOS = rclpy.qos.qos_profile_sensor_data
+        # Use BEST_EFFORT QoS to match image_transport republish
+        SENSOR_QOS = qos.QoSProfile(
+            reliability=qos.ReliabilityPolicy.BEST_EFFORT,
+            durability=qos.DurabilityPolicy.VOLATILE,
+            depth=1
+        )
 
         # Handle parameter updates
         self.param_handler_ptr_ = self.add_on_set_parameters_callback(
@@ -91,16 +96,13 @@ class EchoNode(Node):
 
         # Set the sonar range, tx_mode, and enable the transponder
         state = 'on' if self.power_state else 'off'
-        requests.put(self.api_url + '/transceiver',
+        requests.patch(self.api_url + '/transponder',
                      json={
-                           "power_state": state,
-                           "range": self.range,
-                           "tx_mode": self.tx_mode
+                           "enable": self.power_state,
+                           "sonar_range": float(self.range)
                        })
 
-        # Set the data stream type to RTSP
-        requests.put(self.api_url + '/datastream', 
-                     json={"stream_type": 'rtsp'})
+        # Note: RTSP stream is automatically available when transponder is enabled
 
         # Initialize CV bridge, video capture, and ros2 publisher
         self.br = CvBridge()
@@ -116,9 +118,17 @@ class EchoNode(Node):
                 if not self.power_state:
                     rclpy.spin_once(self, timeout_sec=1.0)
                     continue
-                _, frame = self.cap.read()
+                ret, frame = self.cap.read()
+                if not ret:
+                    continue
+                    
+                # Raw data 보존 - 필터링 없이 원본 그대로
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                
+                # 범위 정보를 메타데이터로 저장
                 frame[0, 0] = self.range
+                
+                # Raw data 그대로 퍼블리시
                 frame = self.br.cv2_to_imgmsg(frame, encoding='mono8')
                 frame.header.stamp = self.get_clock().now().to_msg()
                 frame.header.frame_id = self.frame_id

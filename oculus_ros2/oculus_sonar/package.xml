@@ -43,6 +43,9 @@
 
   <!-- TODO: Port g3log_ros to ROS2 if needed for logging -->
   <!-- <depend>g3log_ros</depend> -->
+  <depend>g3log</depend>
+  <depend>boost</depend>
+  <depend>opencv</depend>
 
   <!-- Testing dependencies -->
   <test_depend>ament_lint_auto</test_depend>

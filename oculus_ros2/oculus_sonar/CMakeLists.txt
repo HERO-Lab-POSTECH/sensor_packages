@@ -31,6 +31,8 @@ find_package(image_transport REQUIRED)
 find_package(liboculus REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system)
+
+find_package(g3log REQUIRED)
 # TODO: Port sonar_image_proc to ROS2 if needed for postprocessing
 # find_package(sonar_image_proc REQUIRED)
 # TODO: Port g3log_ros to ROS2 if needed for logging
@@ -80,6 +82,8 @@ ament_target_dependencies(oculus_driver_component
 # Link with generated messages
 target_link_libraries(oculus_driver_component 
   # rosidl_get_typesupport_target 등 rosidl_로 시작하는 모든 함수 호출 완전 삭제
+  ${liboculus_LIBRARIES}
+  g3log
 )
 
 # Register components (replaces nodelet plugin)

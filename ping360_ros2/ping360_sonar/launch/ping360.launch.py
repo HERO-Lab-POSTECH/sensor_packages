@@ -48,12 +48,12 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'connection_type',
-            default_value='serial',
+            default_value='udp',
             description='Connection type: serial or udp'
         ),
         DeclareLaunchArgument(
             'udp_address',
-            default_value='0.0.0.0',
+            default_value='192.168.0.201',
             description='UDP address (only for udp connection)'
         ),
         DeclareLaunchArgument(

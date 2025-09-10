@@ -14,6 +14,8 @@
 
   <!-- g3log_ros is not available in ROS2, using g3log directly -->
   <!-- <depend>g3log_ros</depend> -->
+  <depend condition="$ROS_VERSION == 2">g3log</depend>
+  <depend>boost</depend>
 
   <export>
     <build_type condition="$ROS_VERSION == 1">catkin</build_type>

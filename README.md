@@ -113,7 +113,7 @@ sudo apt install ros-humble-desktop
 
 # Build tools
 sudo apt install python3-colcon-common-extensions
-sudo apt install ros-humble-image-transport ros-humble-cv-bridge
+sudo apt install ros-humble-image-transport ros-humble-cv-bridge ros-humble-image-transport-plugins
 
 # Additional dependencies
 sudo apt install ros-humble-pcl-ros ros-humble-pcl-conversions
@@ -242,16 +242,47 @@ sudo udevadm control --reload-rules && sudo udevadm trigger
 - `use_rviz`: RViz 시각화 실행 (기본값: true)
 
 #### Sonoptix Echo
-- `ip`: 소나 IP 주소 (기본값: 192.168.2.42)
+- `ip`: 소나 IP 주소 (기본값: 192.168.0.203)
 - `range`: 소나 범위 [m] (기본값: 12)
 - `tx_mode`: 송신 모드 'auto' 또는 'manual' (기본값: auto)
 - `power_state`: 초기 전원 상태 (기본값: True)
 - `data_topic`: 원시 소나 데이터 토픽 (기본값: /sensor/sonar/sonoptix/data)
-- `compressed_topic`: 압축된 데이터 토픽 (기본값: /sensor/sonar/sonoptix/compressed)
+- `compressed_topic`: 압축된 소나 데이터 토픽 (기본값: /sensor/sonar/sonoptix/compressed)
+- `frame_id`: 소나 데이터 프레임 ID (기본값: echo)
 - `compression_level`: 압축 레벨 1-9 (기본값: 1)
-- `reliability`: QoS 설정 'best_effort' 또는 'reliable' (기본값: best_effort)
+- `reliability`: QoS 신뢰성 설정 'best_effort' 또는 'reliable' (기본값: best_effort)
 
 **참고**: echo.launch.py는 자동으로 image_transport 노드를 실행하여 raw 이미지를 compressed 형식으로 변환합니다.
+
+## Network Configuration
+
+### Sonoptix Echo 소나 네트워크 설정
+
+Sonoptix Echo 소나를 사용하기 위해서는 올바른 네트워크 설정이 필요합니다:
+
+#### 기본 네트워크 설정
+- **센서 IP**: `192.168.0.203` (기본값)
+- **컴퓨터 IP**: `192.168.0.12` (권장)
+- **네트워크 대역**: `192.168.0.x/24`
+
+#### 네트워크 설정 명령어
+```bash
+# 센서와 같은 네트워크 대역으로 설정
+sudo ip addr del 192.168.2.42/24 dev enx3c18a0127d4c
+sudo ip addr add 192.168.0.12/24 dev enx3c18a0127d4c
+
+# 연결 테스트
+ping 192.168.0.203
+curl http://192.168.0.203:8000/api/v1/status
+```
+
+#### 문제 해결
+- **Connection refused**: 센서가 완전히 부팅되지 않았거나 다른 포트를 사용 중
+- **No route to host**: 네트워크 대역이 다름 (센서와 컴퓨터가 다른 서브넷에 있음)
+- **센서 IP 확인**: ARP 테이블에서 센서 IP 확인
+  ```bash
+  arp -a | grep enx3c18a0127d4c
+  ```
 
 ## Troubleshooting
 
