@@ -25,9 +25,9 @@ Ping360Sonar::Ping360Sonar(rclcpp::NodeOptions options)
   declareParamDescription("sonar_timeout", 8000, "Sonar timeout [ms]", 0, 20000);
 
   // other, unbounded params
-  publish_image = declareParamDescription("publish_image", true, "Publish images on 'scan_image'");
-  publish_scan = declareParamDescription("publish_scan", false, "Publish laserscans on 'scan'");
-  publish_echo = declareParamDescription("publish_echo", false, "Publish raw echo on 'scan_echo'");
+  publish_image = declareParamDescription("publish_image", true, "Publish images on '/sensor/sonar/ping360/image'");
+  publish_scan = declareParamDescription("publish_scan", false, "Publish laserscans on '/sensor/sonar/ping360/scan'");
+  publish_echo = declareParamDescription("publish_echo", false, "Publish raw echo on '/sensor/sonar/ping360/echo'");
 
   // constant initialization
   const auto frame{declareParamDescription<string>("frame", "sonar", "Frame ID of the message headers")};
@@ -105,13 +105,13 @@ void Ping360Sonar::initPublishers(bool image, bool scan, bool echo)
   publish_scan = scan;
 
   if(publish_image && image_pub.getTopic().empty())
-    image_pub = image_transport::create_publisher(this, "scan_image");
+    image_pub = image_transport::create_publisher(this, "/sensor/sonar/ping360/image");
 
   if(publish_echo && echo_pub == nullptr)
-    echo_pub = create_publisher<ping360_sonar_msgs::msg::SonarEcho>("scan_echo", qos);
+    echo_pub = create_publisher<ping360_sonar_msgs::msg::SonarEcho>("/sensor/sonar/ping360/echo", qos);
 
   if(publish_scan && scan_pub == nullptr)
-    scan_pub = create_publisher<sensor_msgs::msg::LaserScan>("scan", qos);
+    scan_pub = create_publisher<sensor_msgs::msg::LaserScan>("/sensor/sonar/ping360/scan", qos);
 }
 
 void Ping360Sonar::configureFromParams(const vector<rclcpp::Parameter> &new_params)

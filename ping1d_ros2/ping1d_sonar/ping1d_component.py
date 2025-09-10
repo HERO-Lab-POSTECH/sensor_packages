@@ -36,12 +36,12 @@ module = importlib.import_module(module_name)
 class Ping1dComponent(Node):
   def __init__(self):
     super().__init__("ping1d_node")
-    self.publisher_ = self.create_publisher(Range, "/ping1d/range", 10)
-    self.dist_pub_ = self.create_publisher(Float32, "/ping1d/data", 10)
-    self.speed_pub_ = self.create_publisher(Float32, "/ping1d/param/speed", 10)
-    self.interval_pub_ = self.create_publisher(Float32, "/ping1d/param/interval", 10)
-    self.gain_pub_ = self.create_publisher(Float32, "/ping1d/param/gain", 10)
-    self.mode_pub_ = self.create_publisher(Float32, "/ping1d/param/mode", 10)
+    self.publisher_ = self.create_publisher(Range, "/sensor/sonar/ping1d/range", 10)
+    self.dist_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/data", 10)
+    self.speed_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/speed", 10)
+    self.interval_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/interval", 10)
+    self.gain_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/gain", 10)
+    self.mode_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/mode", 10)
     self.timer_ = self.create_timer(0.1, self.range_callback)
 
     ### Declare ROS 2 Parameter

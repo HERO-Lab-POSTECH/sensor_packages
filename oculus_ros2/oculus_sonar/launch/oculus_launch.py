@@ -160,8 +160,10 @@ def generate_launch_description():
 # NOTE: To visualize sonar data in ROS2, use rviz2:
 # 1. Launch this file: ros2 launch oculus_sonar oculus_launch.py
 # 2. Open rviz2: rviz2
-# 3. Add Image display and set topic to: /oculus/sonar_image_raw
+# 3. Add Image display and set topic to: /sensor/sonar/oculus_m750d/raw
 # 
 # Available topics:
-# - /oculus/sonar_image_raw (sensor_msgs/Image) - for rviz2 visualization
-# - /oculus/sonar_image (marine_acoustic_msgs/SonarImage) - full sonar data with metadata
+# - /sensor/sonar/oculus_m750d/raw (sensor_msgs/Image) - for rviz2 visualization
+# - /sensor/sonar/oculus_m750d/image (marine_acoustic_msgs/SonarImage) - full sonar data with metadata
+# - /sensor/sonar/oculus_m750d/metadata (oculus_sonar_msgs/OculusMetadata) - sonar metadata
+# - /sensor/sonar/oculus_m750d/raw_data (apl_msgs/RawData) - raw binary data

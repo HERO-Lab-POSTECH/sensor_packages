@@ -147,6 +147,9 @@ ros2 launch ping360_sonar ping360.launch.py device:=/dev/ttyUSB0
 
 # Ping1D altimeter
 ros2 launch ping1d_sonar ping_sonar.launch.py device:=/dev/ttyUSB1
+
+# Sonoptix Echo sonar
+ros2 launch sonoptix_ros2 echo.launch.py ip:=192.168.2.42
 ```
 
 ### LiDAR SLAM
@@ -157,6 +160,45 @@ ros2 launch fast_lio mapping.launch.py config_file:=mid360.yaml
 # Livox driver
 ros2 launch livox_driver msg_MID360_launch.py
 ```
+
+## Topic Naming Convention
+
+모든 센서 토픽은 일관된 네이밍 컨벤션을 따릅니다:
+```
+/sensor/<sensor_type>/<manufacturer>_<model>/<data_type>
+```
+
+### LiDAR Topics
+- **Livox MID360**: 
+  - Points: `/sensor/lidar/livox_mid360/points`
+  - IMU: `/sensor/ins/livox_mid360/imu`
+- **Livox Avia**: 
+  - Points: `/sensor/lidar/livox_avia/points`
+  - IMU: `/sensor/ins/livox_avia/imu`
+- **Livox HAP**: 
+  - Points: `/sensor/lidar/livox_hap/points`
+  - IMU: `/sensor/ins/livox_hap/imu`
+
+### Sonar Topics
+- **Oculus M750d**:
+  - Raw: `/sensor/sonar/oculus_m750d/raw`
+  - Image: `/sensor/sonar/oculus_m750d/image`
+- **Ping360**:
+  - Echo: `/sensor/sonar/ping360/echo`
+  - Scan: `/sensor/sonar/ping360/scan`
+  - Image: `/sensor/sonar/ping360/image`
+- **Ping1D**:
+  - Range: `/sensor/sonar/ping1d/range`
+- **Sonoptix Echo**:
+  - Data: `/sensor/sonar/sonoptix/data`
+  - Compressed: `/sensor/sonar/sonoptix/compressed`
+
+### SLAM Output Topics
+- **FAST-LIO**:
+  - Odometry: `/fast_lio/odometry`
+  - Registered Cloud: `/fast_lio/cloud_registered`
+  - Map: `/fast_lio/map`
+  - Path: `/fast_lio/path`
 
 ## Device Configuration
 

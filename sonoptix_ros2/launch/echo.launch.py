@@ -26,23 +26,86 @@
 
 from launch_ros.actions import Node
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
-    # Higher is more compressed but requires more compute [1-9]
-    compression_level = 1
-    sonar_range = 12  # meters
-    data_topic = '/sonar/echo/data'
-    compressed_topic = '/sonar/echo/compressed'
-    # QoS Config
-    reliability = 'best_effort'
+    # Declare launch arguments
+    declare_ip = DeclareLaunchArgument(
+        'ip',
+        default_value='192.168.2.42',
+        description='IP address of the Sonoptix sonar'
+    )
+    
+    declare_range = DeclareLaunchArgument(
+        'range',
+        default_value='12',
+        description='Sonar range in meters'
+    )
+    
+    declare_tx_mode = DeclareLaunchArgument(
+        'tx_mode',
+        default_value='auto',
+        description='Transmission mode (auto/manual)'
+    )
+    
+    declare_power_state = DeclareLaunchArgument(
+        'power_state',
+        default_value='True',
+        description='Initial power state of the sonar'
+    )
+    
+    declare_data_topic = DeclareLaunchArgument(
+        'data_topic',
+        default_value='/sensor/sonar/sonoptix/data',
+        description='Topic name for raw sonar data'
+    )
+    
+    declare_compressed_topic = DeclareLaunchArgument(
+        'compressed_topic',
+        default_value='/sensor/sonar/sonoptix/compressed',
+        description='Topic name for compressed sonar data'
+    )
+    
+    declare_frame_id = DeclareLaunchArgument(
+        'frame_id',
+        default_value='echo',
+        description='Frame ID for the sonar data'
+    )
+    
+    declare_compression_level = DeclareLaunchArgument(
+        'compression_level',
+        default_value='1',
+        description='Compression level [1-9], higher is more compressed but requires more compute'
+    )
+    
+    declare_reliability = DeclareLaunchArgument(
+        'reliability',
+        default_value='best_effort',
+        description='QoS reliability setting (best_effort/reliable)'
+    )
+    
+    # Get launch configurations
+    ip = LaunchConfiguration('ip')
+    sonar_range = LaunchConfiguration('range')
+    tx_mode = LaunchConfiguration('tx_mode')
+    power_state = LaunchConfiguration('power_state')
+    data_topic = LaunchConfiguration('data_topic')
+    compressed_topic = LaunchConfiguration('compressed_topic')
+    frame_id = LaunchConfiguration('frame_id')
+    compression_level = LaunchConfiguration('compression_level')
+    reliability = LaunchConfiguration('reliability')
 
     echo_data = Node(package='sonoptix_ros2',
                      executable='echo',
                      parameters=[{
-                         'topic': data_topic,
+                         'ip': ip,
                          'range': sonar_range,
-                         f'qos_overrides.{data_topic}.publisher.reliability': reliability
+                         'tx_mode': tx_mode,
+                         'power_state': power_state,
+                         'topic': data_topic,
+                         'frame_id': frame_id,
                      }],
                      output='screen')
 
@@ -55,8 +118,19 @@ def generate_launch_description():
                           parameters=[{
                               'out.compressed.format': 'png',
                               'out.compressed.png_level': compression_level,
-                              f'qos_overrides.{compressed_topic}.publisher.reliability': reliability
                           }],
                           output='screen')
 
-    return LaunchDescription([echo_data, echo_transport])
+    return LaunchDescription([
+        declare_ip,
+        declare_range,
+        declare_tx_mode,
+        declare_power_state,
+        declare_data_topic,
+        declare_compressed_topic,
+        declare_frame_id,
+        declare_compression_level,
+        declare_reliability,
+        echo_data,
+        echo_transport
+    ])

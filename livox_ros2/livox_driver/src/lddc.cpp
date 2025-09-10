@@ -571,13 +571,53 @@ PublisherPtr Lddc::GetCurrentPublisher(uint8_t index) {
     char name_str[48];
     memset(name_str, 0, sizeof(name_str));
     if (use_multi_topic_) {
+      // Determine sensor name based on device type
+      const char* sensor_name = "livox";
+      uint8_t dev_type = lds_->lidars_[index].device_type;
+      
+      if (dev_type == 0) {
+        sensor_name = "livox_mid360";  // Default assumption
+      } else {
+        switch(dev_type) {
+          case 7:  sensor_name = "livox_avia"; break;
+          case 9:  sensor_name = "livox_mid360"; break;
+          case 15: sensor_name = "livox_hap"; break;
+          case 10: sensor_name = "livox_hap"; break;
+          case 3:  sensor_name = "livox_horizon"; break;
+          case 6:  sensor_name = "livox_mid70"; break;
+          case 1:  sensor_name = "livox_mid40"; break;
+          default: sensor_name = "livox"; break;
+        }
+      }
+      
       std::string ip_string = IpNumToString(lds_->lidars_[index].handle);
-      snprintf(name_str, sizeof(name_str), "livox/lidar_%s",
-               ReplacePeriodByUnderline(ip_string).c_str());
+      snprintf(name_str, sizeof(name_str), "sensor/lidar/%s_%s/points",
+               sensor_name, ReplacePeriodByUnderline(ip_string).c_str());
       DRIVER_INFO(*cur_node_, "Support multi topics.");
     } else {
+      // For single topic mode, determine sensor type from first device
+      const char* sensor_name = "livox";
+      if (lds_ && lds_->lidar_count_ > 0) {
+        uint8_t dev_type = lds_->lidars_[0].device_type;
+        
+        if (dev_type == 0) {
+          sensor_name = "livox_mid360";  // Default assumption
+        } else {
+          switch(dev_type) {
+            case 7:  sensor_name = "livox_avia"; break;
+            case 9:  sensor_name = "livox_mid360"; break;
+            case 15: sensor_name = "livox_hap"; break;
+            case 10: sensor_name = "livox_hap"; break;
+            case 3:  sensor_name = "livox_horizon"; break;
+            case 6:  sensor_name = "livox_mid70"; break;
+            case 1:  sensor_name = "livox_mid40"; break;
+            default: sensor_name = "livox"; break;
+          }
+        }
+      }
+      
       DRIVER_INFO(*cur_node_, "Support only one topic.");
-      snprintf(name_str, sizeof(name_str), "livox/lidar");
+      snprintf(name_str, sizeof(name_str), "sensor/lidar/%s/points", sensor_name);
     }
 
     *pub = new ros::Publisher;
@@ -622,12 +662,52 @@ PublisherPtr Lddc::GetCurrentImuPublisher(uint8_t handle) {
     memset(name_str, 0, sizeof(name_str));
     if (use_multi_topic_) {
       DRIVER_INFO(*cur_node_, "Support multi topics.");
+      // Determine sensor name based on device type
+      const char* sensor_name = "livox";
+      uint8_t dev_type = lds_->lidars_[handle].device_type;
+      
+      if (dev_type == 0) {
+        sensor_name = "livox_mid360";  // Default assumption
+      } else {
+        switch(dev_type) {
+          case 7:  sensor_name = "livox_avia"; break;
+          case 9:  sensor_name = "livox_mid360"; break;
+          case 15: sensor_name = "livox_hap"; break;
+          case 10: sensor_name = "livox_hap"; break;
+          case 3:  sensor_name = "livox_horizon"; break;
+          case 6:  sensor_name = "livox_mid70"; break;
+          case 1:  sensor_name = "livox_mid40"; break;
+          default: sensor_name = "livox"; break;
+        }
+      }
+      
       std::string ip_string = IpNumToString(lds_->lidars_[handle].handle);
-      snprintf(name_str, sizeof(name_str), "livox/imu_%s",
-               ReplacePeriodByUnderline(ip_string).c_str());
+      snprintf(name_str, sizeof(name_str), "sensor/ins/%s_%s/imu",
+               sensor_name, ReplacePeriodByUnderline(ip_string).c_str());
     } else {
       DRIVER_INFO(*cur_node_, "Support only one topic.");
-      snprintf(name_str, sizeof(name_str), "livox/imu");
+      // For single topic mode, determine sensor type from first device
+      const char* sensor_name = "livox";
+      if (lds_ && lds_->lidar_count_ > 0) {
+        uint8_t dev_type = lds_->lidars_[0].device_type;
+        
+        if (dev_type == 0) {
+          sensor_name = "livox_mid360";  // Default assumption
+        } else {
+          switch(dev_type) {
+            case 7:  sensor_name = "livox_avia"; break;
+            case 9:  sensor_name = "livox_mid360"; break;
+            case 15: sensor_name = "livox_hap"; break;
+            case 10: sensor_name = "livox_hap"; break;
+            case 3:  sensor_name = "livox_horizon"; break;
+            case 6:  sensor_name = "livox_mid70"; break;
+            case 1:  sensor_name = "livox_mid40"; break;
+            default: sensor_name = "livox"; break;
+          }
+        }
+      }
+      
+      snprintf(name_str, sizeof(name_str), "sensor/ins/%s/imu", sensor_name);
     }
 
     *pub = new ros::Publisher;
@@ -643,12 +723,52 @@ std::shared_ptr<rclcpp::PublisherBase> Lddc::GetCurrentPublisher(uint8_t handle)
   uint32_t queue_size = kMinEthPacketQueueSize;
   if (use_multi_topic_) {
     if (!private_pub_[handle]) {
-      char name_str[48];
+      char name_str[128];
       memset(name_str, 0, sizeof(name_str));
 
+      // Determine sensor name based on device type
+      const char* sensor_name = "livox";
+      uint8_t dev_type = lds_->lidars_[handle].device_type;
+      
+      // If device_type is not yet set (0), use default based on config
+      // This assumes MID360 for now, but could be improved
+      if (dev_type == 0) {
+        sensor_name = "livox_mid360";  // Default assumption for MID360 config
+      } else {
+        switch(dev_type) {
+          case 7:  // kLivoxLidarTypeAvia
+            sensor_name = "livox_avia";
+            break;
+          case 9:  // kLivoxLidarTypeMid360
+            sensor_name = "livox_mid360";
+            break;
+          case 15: // kLivoxLidarTypeHAP
+            sensor_name = "livox_hap";
+            break;
+          case 10: // kLivoxLidarTypeIndustrialHAP
+            sensor_name = "livox_hap";
+            break;
+          case 3:  // kLivoxLidarTypeHorizon
+            sensor_name = "livox_horizon";
+            break;
+          case 6:  // kLivoxLidarTypeMid70
+            sensor_name = "livox_mid70";
+            break;
+          case 1:  // kLivoxLidarTypeMid40
+            sensor_name = "livox_mid40";
+            break;
+          default:
+            // Fallback to generic naming
+            sensor_name = "livox";
+            break;
+        }
+      }
+      
+      // For multiple sensors of same type, append IP
       std::string ip_string = IpNumToString(lds_->lidars_[handle].handle);
-      snprintf(name_str, sizeof(name_str), "livox/lidar_%s",
-          ReplacePeriodByUnderline(ip_string).c_str());
+      snprintf(name_str, sizeof(name_str), "/sensor/lidar/%s_%s/points",
+          sensor_name, ReplacePeriodByUnderline(ip_string).c_str());
+      
       std::string topic_name(name_str);
       queue_size = queue_size * 2; // queue size is 64 for only one lidar
       private_pub_[handle] = CreatePublisher(transfer_format_, topic_name, queue_size);
@@ -656,7 +776,31 @@ std::shared_ptr<rclcpp::PublisherBase> Lddc::GetCurrentPublisher(uint8_t handle)
     return private_pub_[handle];
   } else {
     if (!global_pub_) {
-      std::string topic_name("livox/lidar");
+      // For single topic mode, determine sensor type from first device
+      const char* sensor_name = "livox";
+      if (lds_ && lds_->lidar_count_ > 0) {
+        uint8_t dev_type = lds_->lidars_[0].device_type;
+        
+        // If device_type is not yet set (0), use default based on config
+        if (dev_type == 0) {
+          sensor_name = "livox_mid360";  // Default assumption for MID360 config
+        } else {
+          switch(dev_type) {
+            case 7:  sensor_name = "livox_avia"; break;
+            case 9:  sensor_name = "livox_mid360"; break;
+            case 15: sensor_name = "livox_hap"; break;
+            case 10: sensor_name = "livox_hap"; break;
+            case 3:  sensor_name = "livox_horizon"; break;
+            case 6:  sensor_name = "livox_mid70"; break;
+            case 1:  sensor_name = "livox_mid40"; break;
+            default: sensor_name = "livox"; break;
+          }
+        }
+      }
+      
+      char name_str[128];
+      snprintf(name_str, sizeof(name_str), "/sensor/lidar/%s/points", sensor_name);
+      std::string topic_name(name_str);
       queue_size = queue_size * 8; // shared queue size is 256, for all lidars
       global_pub_ = CreatePublisher(transfer_format_, topic_name, queue_size);
     }
@@ -668,11 +812,29 @@ std::shared_ptr<rclcpp::PublisherBase> Lddc::GetCurrentImuPublisher(uint8_t hand
   uint32_t queue_size = kMinEthPacketQueueSize;
   if (use_multi_topic_) {
     if (!private_imu_pub_[handle]) {
-      char name_str[48];
+      char name_str[128];
       memset(name_str, 0, sizeof(name_str));
+      
+      // Determine sensor name based on device type
+      const char* sensor_name = "livox";
+      uint8_t dev_type = lds_->lidars_[handle].device_type;
+      
+      switch(dev_type) {
+        case 7:  sensor_name = "livox_avia"; break;
+        case 9:  sensor_name = "livox_mid360"; break;
+        case 15: sensor_name = "livox_hap"; break;
+        case 10: sensor_name = "livox_hap"; break;
+        case 3:  sensor_name = "livox_horizon"; break;
+        case 6:  sensor_name = "livox_mid70"; break;
+        case 1:  sensor_name = "livox_mid40"; break;
+        default: sensor_name = "livox"; break;
+      }
+      
+      // For multiple sensors of same type, append IP
       std::string ip_string = IpNumToString(lds_->lidars_[handle].handle);
-      snprintf(name_str, sizeof(name_str), "livox/imu_%s",
-          ReplacePeriodByUnderline(ip_string).c_str());
+      snprintf(name_str, sizeof(name_str), "/sensor/ins/%s_%s/imu",
+          sensor_name, ReplacePeriodByUnderline(ip_string).c_str());
+      
       std::string topic_name(name_str);
       queue_size = queue_size * 2; // queue size is 64 for only one lidar
       private_imu_pub_[handle] = CreatePublisher(kLivoxImuMsg, topic_name,
@@ -681,7 +843,31 @@ std::shared_ptr<rclcpp::PublisherBase> Lddc::GetCurrentImuPublisher(uint8_t hand
     return private_imu_pub_[handle];
   } else {
     if (!global_imu_pub_) {
-      std::string topic_name("livox/imu");
+      // For single topic mode, determine sensor type from first device
+      const char* sensor_name = "livox";
+      if (lds_ && lds_->lidar_count_ > 0) {
+        uint8_t dev_type = lds_->lidars_[0].device_type;
+        
+        // If device_type is not yet set (0), use default based on config
+        if (dev_type == 0) {
+          sensor_name = "livox_mid360";  // Default assumption for MID360 config
+        } else {
+          switch(dev_type) {
+            case 7:  sensor_name = "livox_avia"; break;
+            case 9:  sensor_name = "livox_mid360"; break;
+            case 15: sensor_name = "livox_hap"; break;
+            case 10: sensor_name = "livox_hap"; break;
+            case 3:  sensor_name = "livox_horizon"; break;
+            case 6:  sensor_name = "livox_mid70"; break;
+            case 1:  sensor_name = "livox_mid40"; break;
+            default: sensor_name = "livox"; break;
+          }
+        }
+      }
+      
+      char name_str[128];
+      snprintf(name_str, sizeof(name_str), "/sensor/ins/%s/imu", sensor_name);
+      std::string topic_name(name_str);
       queue_size = queue_size * 8; // shared queue size is 256, for all lidars
       global_imu_pub_ = CreatePublisher(kLivoxImuMsg, topic_name, queue_size);
     }

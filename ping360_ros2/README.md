@@ -132,15 +132,15 @@ The list below corresponds to the output of `ros2 param describe` for all `ping3
     - Default value: 300 [100..2..1000]
 - `publish_echo`
     - Type: boolean
-    - Description: Publish raw echo on 'scan_echo'
+    - Description: Publish raw echo on '/sensor/sonar/ping360/echo'
     - Default value: False
 - `publish_image`
     - Type: boolean
-    - Description: Publish images on 'scan_image'
+    - Description: Publish images on '/sensor/sonar/ping360/image'
     - Default value: True
 - `publish_scan`
     - Type: boolean
-    - Description: Publish laserscans on 'scan'
+    - Description: Publish laserscans on '/sensor/sonar/ping360/scan'
     - Default value: False
 - `range_max`
     - Type: integer

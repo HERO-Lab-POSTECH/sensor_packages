@@ -92,13 +92,13 @@ class Ping360_node(Node):
         self.publish_echo = echo
         
         if image and self.image_pub is None:
-            self.image_pub = self.create_publisher(Image, "scan_image", 1)
+            self.image_pub = self.create_publisher(Image, "/sensor/sonar/ping360/image", 1)
             
         if scan and self.scan_pub is None:
-            self.scan_pub = self.create_publisher(LaserScan, "scan", 1)
+            self.scan_pub = self.create_publisher(LaserScan, "/sensor/sonar/ping360/scan", 1)
             
         if echo and self.echo_pub is None:
-            self.echo_pub = self.create_publisher(SonarEcho, "scan_echo", 1)
+            self.echo_pub = self.create_publisher(SonarEcho, "/sensor/sonar/ping360/echo", 1)
     
     def configureFromParams(self, changes = []):
         

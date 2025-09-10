@@ -60,7 +60,7 @@ class EchoNode(Node):
             'ip': ['192.168.2.42', str],
             'tx_mode': ['auto', str],
             'power_state': [True, bool],
-            'topic': ['/sonar/echo/data', str],
+            'topic': ['/sensor/sonar/sonoptix/data', str],
             'frame_id': ['echo', str],
         }
 

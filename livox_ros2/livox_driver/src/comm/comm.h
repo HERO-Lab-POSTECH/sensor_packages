@@ -272,6 +272,7 @@ typedef struct {
 /** Lidar data source info abstract */
 typedef struct {
   uint8_t lidar_type;
+  uint8_t device_type;  // Actual device type (MID360, Avia, HAP, etc.)
   uint32_t handle;
   // union {
   //   uint8_t slot : 4; //slot for LivoxLidarType::kVehicleLidarType

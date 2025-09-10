@@ -114,16 +114,16 @@ ros2 run oculus_sonar oculus_driver_node
 드라이버가 실행 중일 때 파라미터 변경:
 
 ```bash
-ros2 param set /oculus/oculus_sonar range 5.0
-ros2 param set /oculus/oculus_sonar gain 80
-ros2 param set /oculus/oculus_sonar data_size "16bit"
-ros2 param set /oculus/oculus_sonar freq_mode 1
+ros2 param set /oculus_sonar range 5.0
+ros2 param set /oculus_sonar gain 80
+ros2 param set /oculus_sonar data_size "16bit"
+ros2 param set /oculus_sonar freq_mode 1
 ```
 
 ### 현재 파라미터 조회
 ```bash
-ros2 param list /oculus/oculus_sonar
-ros2 param get /oculus/oculus_sonar range
+ros2 param list /oculus_sonar
+ros2 param get /oculus_sonar range
 ```
 
 ### GUI 파라미터 조정
@@ -136,10 +136,10 @@ rqt
 
 | 토픽 | 메시지 타입 | 설명 |
 |-------|--------------|-------------|
-| `/oculus/sonar_image` | `marine_acoustic_msgs/msg/SonarImage` | 메타데이터를 포함한 전체 소나 데이터 |
-| `/oculus/sonar_image_raw` | `sensor_msgs/msg/Image` | rviz2 시각화용 표준 이미지 |
-| `/oculus/oculus_metadata` | `oculus_sonar_msgs/msg/OculusMetadata` | TVG를 포함한 소나 메타데이터 |
-| `/oculus/raw_data` | `apl_msgs/msg/RawData` | 원시 통신 데이터 |
+| `/sensor/sonar/oculus_m750d/image` | `marine_acoustic_msgs/msg/SonarImage` | 메타데이터를 포함한 전체 소나 데이터 |
+| `/sensor/sonar/oculus_m750d/raw` | `sensor_msgs/msg/Image` | rviz2 시각화용 표준 이미지 |
+| `/sensor/sonar/oculus_m750d/metadata` | `oculus_sonar_msgs/msg/OculusMetadata` | TVG를 포함한 소나 메타데이터 |
+| `/sensor/sonar/oculus_m750d/raw_data` | `apl_msgs/msg/RawData` | 원시 통신 데이터 |
 
 ## Configuration File
 
@@ -174,11 +174,11 @@ ros2 launch oculus_sonar oculus_launch.py \
 ping <sonar_ip_address>
 
 # 통신을 위한 원시 데이터 모니터링
-ros2 topic echo /oculus/raw_data
+ros2 topic echo /sensor/sonar/oculus_m750d/raw_data
 
 # 소나 이미지가 퍼블리시되는지 확인
-ros2 topic hz /oculus/sonar_image_raw
-ros2 topic hz /oculus/sonar_image
+ros2 topic hz /sensor/sonar/oculus_m750d/raw
+ros2 topic hz /sensor/sonar/oculus_m750d/image
 ```
 
 ### 시각화 문제
@@ -187,14 +187,14 @@ ros2 topic hz /oculus/sonar_image
 ros2 topic list | grep image
 
 # 이미지 메시지 세부 정보 확인
-ros2 topic info /oculus/sonar_image_raw
+ros2 topic info /sensor/sonar/oculus_m750d/raw
 ros2 interface show sensor_msgs/msg/Image
 ```
 
 ### 파라미터 문제
 ```bash
 # 파라미터를 기본값으로 리셋
-ros2 param delete /oculus/oculus_sonar range
+ros2 param delete /oculus_sonar range
 # YAML/launch 파일의 기본값 사용
 ```
 
@@ -227,8 +227,8 @@ colcon test-result --verbose
 - **고급 로깅**: ROS1의 `g3log_ros`가 ROS2로 포팅되지 않음
 
 **대안:**
-- 소나 이미지는 `/oculus/sonar_image_raw` 토픽을 통해 `rviz2`에서 시각화 가능 (표준 Image 형식)
-- 고급 소나 데이터는 `/oculus/sonar_image` 토픽을 통해 이용 가능 (커스텀 SonarImage 형식)
+- 소나 이미지는 `/sensor/sonar/oculus_m750d/raw` 토픽을 통해 `rviz2`에서 시각화 가능 (표준 Image 형식)
+- 고급 소나 데이터는 `/sensor/sonar/oculus_m750d/image` 토픽을 통해 이용 가능 (커스텀 SonarImage 형식)
 - 후처리는 별도의 ROS2 노드로 구현 가능
 - 기본 ROS2 로깅 시스템 사용
 
@@ -241,13 +241,13 @@ ros2 launch oculus_sonar oculus_launch.py
 rviz2
 # rviz2에서:
 # 1. Image 디스플레이 추가
-# 2. 토픽을 다음으로 설정: /oculus/sonar_image_raw
+# 2. 토픽을 다음으로 설정: /sensor/sonar/oculus_m750d/raw
 # 3. 소나 이미지가 표시됨
 ```
 
 **토픽 선택:**
-- **`/oculus/sonar_image_raw`** - rviz2 및 표준 이미지 도구용
-- **`/oculus/sonar_image`** - 전체 소나 메타데이터를 포함한 커스텀 처리용
+- **`/sensor/sonar/oculus_m750d/raw`** - rviz2 및 표준 이미지 도구용
+- **`/sensor/sonar/oculus_m750d/image`** - 전체 소나 메타데이터를 포함한 커스텀 처리용
 
 ## License
 

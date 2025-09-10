@@ -51,7 +51,11 @@ void LivoxLidarCallback::LidarInfoChangeCallback(const uint32_t handle,
     }
     LidarDevice *p_lidar = &(lds_lidar->lidars_[index]);
     p_lidar->lidar_type = kLivoxLidarType;
+    p_lidar->device_type = info->dev_type;  // Store actual device type
   } else {
+    // Update device type
+    lidar_device->device_type = info->dev_type;
+    
     // set the lidar according to the user-defined config
     const UserLivoxLidarConfig& config = lidar_device->livox_config;
 

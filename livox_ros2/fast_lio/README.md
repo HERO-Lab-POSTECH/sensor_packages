@@ -1,5 +1,17 @@
 > ROS2 Fork repo maintainer: [Ericsiii](https://github.com/Ericsii)
 
+## Topic Convention Update (2025-09-10)
+
+**Input Topics:**
+- LiDAR: `/sensor/lidar/livox_<model>/points` (예: `livox_mid360`, `livox_avia`)
+- IMU: `/sensor/ins/livox_<model>/imu`
+
+**Output Topics:**
+- Odometry: `/fast_lio/odometry`
+- Registered Cloud: `/fast_lio/cloud_registered`
+- Map: `/fast_lio/map`
+- Path: `/fast_lio/path`
+
 ## Related Works and Extended Application
 
 **SLAM:**

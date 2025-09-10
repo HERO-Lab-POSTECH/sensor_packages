@@ -154,6 +154,7 @@ bool LdsLidar::InitLivoxLidar() {
     }
     LidarDevice *p_lidar = &(g_lds_ldiar->lidars_[index]);
     p_lidar->lidar_type = kLivoxLidarType;
+    p_lidar->device_type = 0;  // Will be updated by LidarInfoChangeCallback
     p_lidar->livox_config = config;
     p_lidar->handle = config.handle;
 

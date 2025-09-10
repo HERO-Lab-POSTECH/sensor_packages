@@ -1,5 +1,13 @@
 # Livox ROS Driver 2
 
+## Topic Naming Convention Update (2025-09-10)
+
+센서별 토픽 이름이 자동으로 생성됩니다:
+- **MID360**: `/sensor/lidar/livox_mid360/points`, `/sensor/ins/livox_mid360/imu`
+- **Avia**: `/sensor/lidar/livox_avia/points`, `/sensor/ins/livox_avia/imu`
+- **HAP**: `/sensor/lidar/livox_hap/points`, `/sensor/ins/livox_hap/imu`
+- **Horizon**: `/sensor/lidar/livox_horizon/points`, `/sensor/ins/livox_horizon/imu`
+
 Livox ROS Driver 2 is the 2nd-generation driver package used to connect LiDAR products produced by Livox, applicable for ROS (noetic recommended) and ROS2 (foxy or humble recommended).
 
   **Note :**

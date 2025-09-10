@@ -58,11 +58,11 @@ void OculusDriver::init() {
 
   // Create publishers
   imaging_sonar_pub_ = this->create_publisher<marine_acoustic_msgs::msg::SonarImage>(
-    "sonar_image", 10);
+    "/sensor/sonar/oculus_m750d/image", 10);
   oculus_meta_pub_ = this->create_publisher<oculus_sonar_msgs::msg::OculusMetadata>(
-    "oculus_metadata", 10);
-  raw_data_pub_ = this->create_publisher<apl_msgs::msg::RawData>("raw_data", 100);
-  image_pub_ = this->create_publisher<sensor_msgs::msg::Image>("sonar_image_raw", 10);  // rviz2 호환용
+    "/sensor/sonar/oculus_m750d/metadata", 10);
+  raw_data_pub_ = this->create_publisher<apl_msgs::msg::RawData>("/sensor/sonar/oculus_m750d/raw_data", 100);
+  image_pub_ = this->create_publisher<sensor_msgs::msg::Image>("/sensor/sonar/oculus_m750d/raw", 10);  // rviz2 호환용
 
   RCLCPP_INFO(this->get_logger(), "Publishing data with frame = %s", frame_id_.c_str());
 
