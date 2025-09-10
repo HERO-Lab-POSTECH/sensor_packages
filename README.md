@@ -6,7 +6,7 @@
 
 이 저장소는 해양 로봇공학 응용을 위해 최적화된 센서 드라이버 패키지 모음을 포함합니다:
 
-- **소나 시스템**: Oculus 이미징 소나, Ping360 스캐닝 소나, Ping1D 고도계
+- **소나 시스템**: Oculus 이미징 소나, Sonoptix 이미징 소나, Ping360 스캐닝 소나, Ping1D 고도계
 - **LiDAR 시스템**: Livox 드라이버 및 FAST-LIO SLAM
 - **지원 라이브러리**: 메시지 정의 및 통신 라이브러리
 
@@ -76,7 +76,10 @@
 - **oculus_sonar**: Blueprint Subsea Oculus 이미징 소나용 커스텀 ROS2 드라이버
 - **oculus_sonar_msgs**: Oculus 소나 메시지 정의
 - **ping360_sonar_msgs**: Ping360 스캐닝 소나 메시지 정의
-- **sonoptix_ros2**: Sonoptix 소나 ROS2 인터페이스 (MIT License)
+- **sonoptix_ros2**: Sonoptix Echo 이미징 소나 ROS2 드라이버 (MIT License)
+  - TCP/IP 통신 기반 실시간 소나 데이터 수신
+  - 이미지 압축 및 스트리밍 지원
+  - ROS2 image_transport를 통한 효율적인 데이터 전송
 
 ## Package Structure
 
@@ -94,9 +97,10 @@ sensor_packages/
 │   ├── oculus_sonar/     # Main Oculus driver (local)
 │   └── oculus_sonar_msgs/# Oculus messages (local)
 ├── ping1d_ros2/          # Ping1D altimeter driver
-└── ping360_ros2/         # Ping360 scanning sonar
-    ├── ping360_sonar/
-    └── ping360_sonar_msgs/
+├── ping360_ros2/         # Ping360 scanning sonar
+│   ├── ping360_sonar/
+│   └── ping360_sonar_msgs/
+└── sonoptix_ros2/        # Sonoptix Echo imaging sonar driver
 ```
 
 ## Installation
@@ -236,6 +240,18 @@ sudo udevadm control --reload-rules && sudo udevadm trigger
 - `scan_start`: 시작 거리 mm 단위 (기본값: 100)
 - `scan_length`: 스캔 길이 mm 단위 (기본값: 3000)
 - `use_rviz`: RViz 시각화 실행 (기본값: true)
+
+#### Sonoptix Echo
+- `ip`: 소나 IP 주소 (기본값: 192.168.2.42)
+- `range`: 소나 범위 [m] (기본값: 12)
+- `tx_mode`: 송신 모드 'auto' 또는 'manual' (기본값: auto)
+- `power_state`: 초기 전원 상태 (기본값: True)
+- `data_topic`: 원시 소나 데이터 토픽 (기본값: /sensor/sonar/sonoptix/data)
+- `compressed_topic`: 압축된 데이터 토픽 (기본값: /sensor/sonar/sonoptix/compressed)
+- `compression_level`: 압축 레벨 1-9 (기본값: 1)
+- `reliability`: QoS 설정 'best_effort' 또는 'reliable' (기본값: best_effort)
+
+**참고**: echo.launch.py는 자동으로 image_transport 노드를 실행하여 raw 이미지를 compressed 형식으로 변환합니다.
 
 ## Troubleshooting
 
