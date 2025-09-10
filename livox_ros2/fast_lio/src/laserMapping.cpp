@@ -842,8 +842,8 @@ public:
         this->get_parameter_or<bool>("publish.scan_bodyframe_pub_en", scan_body_pub_en, true);
         this->get_parameter_or<int>("max_iteration", NUM_MAX_ITERATIONS, 4);
         this->get_parameter_or<string>("map_file_path", map_file_path, "");
-        this->get_parameter_or<string>("common.lid_topic", lid_topic, "/sensor/lidar/mid360/points");
-        this->get_parameter_or<string>("common.imu_topic", imu_topic,"/sensor/ins/mid360/imu");
+        this->get_parameter_or<string>("common.lid_topic", lid_topic, "/sensor/lidar/livox_mid360/points");
+        this->get_parameter_or<string>("common.imu_topic", imu_topic,"/sensor/ins/livox_mid360/imu");
         this->get_parameter_or<bool>("common.time_sync_en", time_sync_en, false);
         this->get_parameter_or<double>("common.time_offset_lidar_to_imu", time_diff_lidar_to_imu, 0.0);
         this->get_parameter_or<double>("filter_size_corner",filter_size_corner_min,0.5);
