@@ -63,7 +63,7 @@ class RelayController:
         atexit.register(self.cleanup)
         signal.signal(signal.SIGINT, self._signal_handler)
         signal.signal(signal.SIGTERM, self._signal_handler)
-        signal.signal(signal.SIGKILL, self._signal_handler) if hasattr(signal, 'SIGKILL') else None
+        # SIGKILL은 잡을 수 없음 - 제거
     
     def _signal_handler(self, signum, frame):
         """시그널 핸들러"""
