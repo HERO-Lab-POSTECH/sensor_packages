@@ -18,11 +18,8 @@ def launch_setup(context, *args, **kwargs):
     # 릴레이 제어 노드 추가 (CH2 for Ping360)
     from launch.actions import ExecuteProcess
     
-    relay_controller_path = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-        'relay_controller',
-        'relay_node.py'
-    )
+    # 소스 디렉토리의 절대 경로 사용
+    relay_controller_path = '/home/hero/ros2_ws/src/sensor_packages/relay_controller/relay_node.py'
     
     return [
         ExecuteProcess(
