@@ -10,20 +10,6 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
 
     packages_name = "ping1d_sonar"
-    rviz_file_name = "ping_sonar.rviz"
-
-    rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare(packages_name), "rviz", rviz_file_name]
-    )
-
-    rviz_node = Node(
-        package="rviz2",
-        executable="rviz2",
-        name="rviz2",
-        output="log",
-        arguments=["-d", rviz_config_file],
-        condition=IfCondition(LaunchConfiguration('use_rviz'))
-    )
 
     ping1d_node = Node(
         package='ping1d_sonar',
