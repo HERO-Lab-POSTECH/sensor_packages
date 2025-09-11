@@ -91,7 +91,6 @@ def generate_launch_description():
             description='Launch RViz for visualization'
         ),
         # Nodes
-        rviz_node,
         ping1d_node,
         base_to_range,
     ])

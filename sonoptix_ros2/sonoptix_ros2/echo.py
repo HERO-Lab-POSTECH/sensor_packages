@@ -118,15 +118,16 @@ class EchoNode(Node):
                     self.get_logger().warn(f'API returned status {response.status_code}, retrying...')
                     
             except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
-                # Check if it's a retryable error (sonar is booting) vs permanent error
+                # Check if it's a retryable error (sonar/network is booting) 
                 error_str = str(e)
                 if ("Connection refused" in error_str or 
                     "ConnectionRefusedError" in error_str or
                     "timed out" in error_str or
-                    "ConnectTimeoutError" in error_str):
-                    # Sonar is likely booting up or network is slow, keep retrying
+                    "ConnectTimeoutError" in error_str or
+                    "No route to host" in error_str):  # Network may still be initializing
+                    # Sonar is likely booting up or network is initializing, keep retrying
                     if attempt == 0:
-                        self.get_logger().info(f'Waiting for sonar API at {self.api_url} (sonar may be booting)...')
+                        self.get_logger().info(f'Waiting for sonar API at {self.api_url} (sonar/network may be initializing)...')
                     elif attempt % 10 == 0:
                         self.get_logger().info(f'Still waiting for sonar API... ({attempt}s elapsed)')
                     
@@ -137,7 +138,7 @@ class EchoNode(Node):
                     rclpy.spin_once(self, timeout_sec=retry_delay)
                     continue
                 else:
-                    # Other connection errors (e.g., no route to host, DNS failure)
+                    # Other permanent connection errors (e.g., DNS failure, invalid hostname)
                     self.get_logger().error(f'Failed to connect to sonar API: {error_str}')
                     self.get_logger().error(f'Please check the IP address: {self.ip}')
                     raise
