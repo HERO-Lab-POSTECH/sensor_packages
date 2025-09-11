@@ -1,4 +1,5 @@
 import os
+import sys
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
@@ -33,6 +34,25 @@ livox_ros2_params = [
 
 
 def generate_launch_description():
+    # 릴레이 제어 노드 추가 (CH3 for Livox MID360)
+    relay_controller_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
+        'relay_controller',
+        'relay_node.py'
+    )
+    
+    relay_node = Node(
+        package='ros2launch',
+        executable=sys.executable,
+        arguments=[relay_controller_path],
+        name='relay_controller_livox',
+        parameters=[{
+            'channel': 3,
+            'sensor_name': 'Livox MID360'
+        }],
+        output='screen'
+    )
+    
     livox_driver = Node(
         package='livox_driver',
         executable='livox_driver_node',
@@ -42,6 +62,7 @@ def generate_launch_description():
         )
 
     return LaunchDescription([
+        relay_node,  # 릴레이 제어 노드를 먼저 실행
         livox_driver,
         # launch.actions.RegisterEventHandler(
         #     event_handler=launch.event_handlers.OnProcessExit(

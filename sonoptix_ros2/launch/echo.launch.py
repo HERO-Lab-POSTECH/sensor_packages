@@ -29,6 +29,8 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
+import os
+import sys
 
 
 def generate_launch_description():
@@ -139,6 +141,25 @@ def generate_launch_description():
                               'qos_overrides.out.compressed.publisher.reliability': 'best_effort',
                           }],
                           output='screen')
+    
+    # 릴레이 제어 노드 추가 (CH1 for Sonoptix Echo)
+    relay_controller_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        'relay_controller',
+        'relay_node.py'
+    )
+    
+    relay_node = Node(
+        package='ros2launch',
+        executable=sys.executable,
+        arguments=[relay_controller_path],
+        name='relay_controller_sonoptix',
+        parameters=[{
+            'channel': 1,
+            'sensor_name': 'Sonoptix Echo'
+        }],
+        output='screen'
+    )
 
     return LaunchDescription([
         declare_ip,
@@ -151,6 +172,7 @@ def generate_launch_description():
         declare_frame_id,
         declare_compression_level,
         declare_reliability,
+        relay_node,  # 릴레이 제어 노드를 먼저 실행
         echo_data,
         # echo_transport  # QoS 충돌로 인해 일시적으로 비활성화
     ])

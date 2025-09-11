@@ -3,6 +3,7 @@ from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 import os
+import sys
 
 def launch_setup(context, *args, **kwargs):
     node_type = LaunchConfiguration('node_type').perform(context)
@@ -13,7 +14,26 @@ def launch_setup(context, *args, **kwargs):
     udp_port = int(LaunchConfiguration('udp_port').perform(context))
     
     executable = 'ping360.py' if node_type == 'python' else 'ping360_node'
+    
+    # 릴레이 제어 노드 추가 (CH2 for Ping360)
+    relay_controller_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        'relay_controller',
+        'relay_node.py'
+    )
+    
     return [
+        Node(
+            package='ros2launch',
+            executable=sys.executable,
+            arguments=[relay_controller_path],
+            name='relay_controller_ping360',
+            parameters=[{
+                'channel': 2,
+                'sensor_name': 'Ping360'
+            }],
+            output='screen'
+        ),
         Node(
             package='ping360_sonar',
             executable=executable,
