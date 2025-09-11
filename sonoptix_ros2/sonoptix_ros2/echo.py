@@ -95,14 +95,49 @@ class EchoNode(Node):
 
         self.get_logger().info(f'Configuring Sonar')
 
-        # Set the sonar range, tx_mode, and enable the transponder
+        # Set the sonar range, tx_mode, and enable the transponder with retry logic
         state = 'on' if self.power_state else 'off'
-        requests.patch(self.api_url + '/transponder',
-                     json={
-                           "enable": self.power_state,
-                           "sonar_range": float(self.range),
-                           "operation_mode": self.operation_mode
-                       })
+        max_retries = 60  # 60초 동안 재시도
+        retry_delay = 1.0  # 1초마다 재시도
+        
+        for attempt in range(max_retries):
+            try:
+                response = requests.patch(self.api_url + '/transponder',
+                             json={
+                                   "enable": self.power_state,
+                                   "sonar_range": float(self.range),
+                                   "trigger_mode": 0,  # 0: Auto (continuous), 1: Software, 2: External
+                                   "operation_mode": self.operation_mode
+                               },
+                             timeout=2.0)
+                
+                if response.status_code == 200:
+                    self.get_logger().info('Successfully configured sonar transponder')
+                    break
+                else:
+                    self.get_logger().warn(f'API returned status {response.status_code}, retrying...')
+                    
+            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+                # Check if it's "Connection refused" (sonar is booting) vs other errors
+                error_str = str(e)
+                if "Connection refused" in error_str or "ConnectionRefusedError" in error_str:
+                    # Sonar is likely booting up, keep retrying
+                    if attempt == 0:
+                        self.get_logger().info(f'Waiting for sonar API at {self.api_url} (sonar may be booting)...')
+                    elif attempt % 10 == 0:
+                        self.get_logger().info(f'Still waiting for sonar API... ({attempt}s elapsed)')
+                    
+                    if attempt == max_retries - 1:
+                        self.get_logger().error(f'Failed to connect to sonar API after {max_retries} seconds')
+                        raise
+                    
+                    rclpy.spin_once(self, timeout_sec=retry_delay)
+                    continue
+                else:
+                    # Other connection errors (e.g., no route to host, wrong IP)
+                    self.get_logger().error(f'Failed to connect to sonar API: {error_str}')
+                    self.get_logger().error(f'Please check the IP address: {self.ip}')
+                    raise
 
         # Note: RTSP stream is automatically available when transponder is enabled
 
