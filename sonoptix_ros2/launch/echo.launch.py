@@ -145,8 +145,8 @@ def generate_launch_description():
     # 릴레이 제어 노드 추가 (CH1 for Sonoptix Echo)
     from launch.actions import ExecuteProcess
     
-    # 소스 디렉토리의 절대 경로 사용
-    relay_controller_path = '/home/hero/ros2_ws/src/sensor_packages/relay_controller/relay_node.py'
+    # 소스 디렉토리의 절대 경로 사용 (V2 버전)
+    relay_controller_path = '/home/hero/ros2_ws/src/sensor_packages/relay_controller/relay_node_v2.py'
     
     relay_node = ExecuteProcess(
         cmd=[sys.executable, relay_controller_path,
