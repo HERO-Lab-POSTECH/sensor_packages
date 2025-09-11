@@ -33,7 +33,7 @@ The node also provides a service to control the sonar's power state, range, and 
 import rclpy
 from rclpy import qos
 from rclpy.node import Node
-from rcl_interfaces.msg import SetParametersResult
+from rcl_interfaces.msg import SetParametersResult, ParameterDescriptor, IntegerRange, FloatingPointRange
 from rclpy.qos_overriding_options import QoSOverridingOptions
 
 import cv2
@@ -55,21 +55,69 @@ class EchoNode(Node):
         super().__init__(node_name)
 
         # --- Parameters ---
-        # Declare and get parameters for the node.
-        params = {
-            'range': [3, int],  # 기본 3m (최소값이 3m인 것 같음)
-            'ip': ['192.168.0.203', str],  # 현재 센서 IP로 업데이트
-            'tx_mode': ['auto', str],
-            'power_state': [True, bool],
-            'operation_mode': [0, int],  # 0: 400kHz, 1: 700kHz (추정)
-            'topic': ['/sensor/sonar/sonoptix/data', str],
-            'frame_id': ['echo', str],
-        }
-
-        for param, [value, dtype] in params.items():
-            self.declare_parameter(param, value)
-            exec(f"self.{param}:dtype = self.get_parameter(param).value")
-        params = self.get_parameters(params.keys())
+        # Declare parameters with descriptors for range validation
+        
+        # Integer parameters with ranges
+        self.declare_parameter('range', 3, 
+            ParameterDescriptor(
+                description='Sonar range in meters',
+                integer_range=[IntegerRange(from_value=3, to_value=100, step=1)]))
+        
+        self.declare_parameter('operation_mode', 0,
+            ParameterDescriptor(
+                description='Operation mode: 0=400kHz, 1=700kHz',
+                integer_range=[IntegerRange(from_value=0, to_value=1, step=1)]))
+        
+        self.declare_parameter('trigger_mode', 0,
+            ParameterDescriptor(
+                description='Trigger mode: 0=Auto, 1=Software, 2=External',
+                integer_range=[IntegerRange(from_value=0, to_value=2, step=1)]))
+        
+        self.declare_parameter('colormap_index', 1,
+            ParameterDescriptor(
+                description='Colormap: 0=gray, 1=amber, 2=ironbow, 3=deep, 4=rainbow',
+                integer_range=[IntegerRange(from_value=0, to_value=4, step=1)]))
+        
+        # Float parameters with ranges
+        self.declare_parameter('gain', 10.0,
+            ParameterDescriptor(
+                description='Image gain',
+                floating_point_range=[FloatingPointRange(from_value=0.0, to_value=100.0, step=0.1)]))
+        
+        self.declare_parameter('contrast', 0.0,
+            ParameterDescriptor(
+                description='Image contrast',
+                floating_point_range=[FloatingPointRange(from_value=0.0, to_value=1.0, step=0.01)]))
+        
+        # String and other parameters without ranges
+        self.declare_parameter('ip', '192.168.0.203',
+            ParameterDescriptor(description='Sonar IP address'))
+        self.declare_parameter('tx_mode', 'auto',
+            ParameterDescriptor(description='Transmission mode'))
+        self.declare_parameter('power_state', True,
+            ParameterDescriptor(description='Sonar power state'))
+        self.declare_parameter('topic', '/sensor/sonar/sonoptix/data',
+            ParameterDescriptor(description='Output topic name'))
+        self.declare_parameter('frame_id', 'echo',
+            ParameterDescriptor(description='Frame ID for messages'))
+        
+        # Get all parameter values
+        self.range = self.get_parameter('range').value
+        self.ip = self.get_parameter('ip').value
+        self.tx_mode = self.get_parameter('tx_mode').value
+        self.power_state = self.get_parameter('power_state').value
+        self.operation_mode = self.get_parameter('operation_mode').value
+        self.trigger_mode = self.get_parameter('trigger_mode').value
+        self.gain = self.get_parameter('gain').value
+        self.contrast = self.get_parameter('contrast').value
+        self.colormap_index = self.get_parameter('colormap_index').value
+        self.topic = self.get_parameter('topic').value
+        self.frame_id = self.get_parameter('frame_id').value
+        
+        # Log all parameters
+        param_names = ['range', 'ip', 'tx_mode', 'power_state', 'operation_mode', 
+                       'trigger_mode', 'gain', 'contrast', 'colormap_index', 'topic', 'frame_id']
+        params = self.get_parameters(param_names)
         for param in params:
             self.get_logger().info(f'{param.name}: {param.value}')
 
@@ -97,7 +145,6 @@ class EchoNode(Node):
         self.get_logger().info(f'Configuring Sonar')
 
         # Set the sonar range, tx_mode, and enable the transponder with retry logic
-        state = 'on' if self.power_state else 'off'
         max_retries = 60  # 60초 동안 재시도
         retry_delay = 1.0  # 1초마다 재시도
         
@@ -107,7 +154,7 @@ class EchoNode(Node):
                              json={
                                    "enable": self.power_state,
                                    "sonar_range": float(self.range),
-                                   "trigger_mode": 0,  # 0: Auto (continuous), 1: Software, 2: External
+                                   "trigger_mode": self.trigger_mode,
                                    "operation_mode": self.operation_mode
                                },
                              timeout=2.0)
@@ -144,6 +191,36 @@ class EchoNode(Node):
                     self.get_logger().error(f'Please check the IP address: {self.ip}')
                     raise
 
+        # Configure additional sonar parameters (config and colormap)
+        try:
+            # Set gain and contrast
+            self.get_logger().info(f'Initial config: gain={self.gain}, contrast={self.contrast}')
+            config_response = requests.patch(self.api_url + '/config',
+                                           json={
+                                               "gain": float(self.gain),
+                                               "contrast": float(self.contrast)
+                                           },
+                                           timeout=2.0)
+            if config_response.status_code == 200:
+                result = config_response.json()
+                self.get_logger().info(f'Config set successfully. Server returned: {result}')
+            else:
+                self.get_logger().error(f'Config update failed: {config_response.status_code} - {config_response.text}')
+            
+            # Set colormap
+            self.get_logger().info(f'Setting colormap index to {self.colormap_index}')
+            colormap_response = requests.put(self.api_url + '/colormap/index',
+                                           json={"value": self.colormap_index},
+                                           timeout=2.0)
+            if colormap_response.status_code == 200:
+                colormap_names = ['gray', 'amber', 'ironbow', 'deep', 'rainbow']
+                result = colormap_response.json()
+                self.get_logger().info(f'Set colormap to {colormap_names[self.colormap_index]}. Server returned: {result}')
+            else:
+                self.get_logger().error(f'Colormap update failed: {colormap_response.status_code} - {colormap_response.text}')
+        except Exception as e:
+            self.get_logger().warn(f'Failed to set config parameters: {e}')
+        
         # Note: RTSP stream is automatically available when transponder is enabled
 
         # Initialize CV bridge, video capture, and ros2 publisher
@@ -157,6 +234,10 @@ class EchoNode(Node):
         self.tx_mode_pub = self.create_publisher(String, '/sensor/sonar/sonoptix/param/tx_mode', 10)
         self.power_state_pub = self.create_publisher(Bool, '/sensor/sonar/sonoptix/param/power_state', 10)
         self.operation_mode_pub = self.create_publisher(Int32, '/sensor/sonar/sonoptix/param/operation_mode', 10)
+        self.trigger_mode_pub = self.create_publisher(Int32, '/sensor/sonar/sonoptix/param/trigger_mode', 10)
+        self.gain_pub = self.create_publisher(Float32, '/sensor/sonar/sonoptix/param/gain', 10)
+        self.contrast_pub = self.create_publisher(Float32, '/sensor/sonar/sonoptix/param/contrast', 10)
+        self.colormap_index_pub = self.create_publisher(Int32, '/sensor/sonar/sonoptix/param/colormap_index', 10)
         self.frame_id_pub = self.create_publisher(String, '/sensor/sonar/sonoptix/param/frame_id', 10)
         
         # RTSP 연결 재시도 로직
@@ -245,6 +326,22 @@ class EchoNode(Node):
                 operation_mode_msg.data = self.operation_mode
                 self.operation_mode_pub.publish(operation_mode_msg)
                 
+                trigger_mode_msg = Int32()
+                trigger_mode_msg.data = self.trigger_mode
+                self.trigger_mode_pub.publish(trigger_mode_msg)
+                
+                gain_msg = Float32()
+                gain_msg.data = float(self.gain)
+                self.gain_pub.publish(gain_msg)
+                
+                contrast_msg = Float32()
+                contrast_msg.data = float(self.contrast)
+                self.contrast_pub.publish(contrast_msg)
+                
+                colormap_index_msg = Int32()
+                colormap_index_msg.data = self.colormap_index
+                self.colormap_index_pub.publish(colormap_index_msg)
+                
                 frame_id_msg = String()
                 frame_id_msg.data = self.frame_id
                 self.frame_id_pub.publish(frame_id_msg)
@@ -309,22 +406,60 @@ class EchoNode(Node):
                 self.get_logger().info(f'Updated {param.name}: {param.value}')
 
             # Configure sonar if necessary
-            if param.name in ['range', 'power_state', 'operation_mode']:
-                # Sonoptix Echo는 3m 미만에서 RTSP 프레임을 보내지 않음
-                if param.name == 'range' and self.range < 3:
-                    self.get_logger().warn(f'Range {self.range}m is below minimum (3m). Setting to 3m.')
-                    self.range = 3
-                    
+            if param.name in ['range', 'power_state', 'operation_mode', 'trigger_mode']:
                 requests.patch(self.api_url + '/transponder',
                              json={
                                 "enable": self.power_state,
                                 "sonar_range": float(self.range),
+                                "trigger_mode": self.trigger_mode,
                                 "operation_mode": self.operation_mode
                              })
                 # Range 또는 operation_mode 변경 시 RTSP 스트림 재연결
                 if param.name in ['range', 'operation_mode']:
                     self.get_logger().info(f'Reconnecting RTSP stream for new settings')
                     self.connect_rtsp()
+            
+            # Configure image parameters
+            if param.name in ['gain', 'contrast']:
+                try:
+                    # API 호출 전 현재 값 로깅
+                    self.get_logger().info(f'Sending config update: gain={self.gain}, contrast={self.contrast}')
+                    
+                    response = requests.patch(self.api_url + '/config',
+                                 json={
+                                    "gain": float(self.gain),
+                                    "contrast": float(self.contrast)
+                                 },
+                                 timeout=2.0)
+                    
+                    if response.status_code == 200:
+                        # 응답 확인
+                        result_data = response.json()
+                        self.get_logger().info(f'Config update successful. Server returned: {result_data}')
+                    else:
+                        self.get_logger().error(f'Config update failed with status {response.status_code}: {response.text}')
+                        
+                except Exception as e:
+                    self.get_logger().error(f'Failed to update config: {e}')
+            
+            # Configure colormap
+            if param.name == 'colormap_index':
+                try:
+                    self.get_logger().info(f'Sending colormap index: {self.colormap_index}')
+                    
+                    response = requests.put(self.api_url + '/colormap/index',
+                               json={"value": self.colormap_index},
+                               timeout=2.0)
+                    
+                    if response.status_code == 200:
+                        colormap_names = ['gray', 'amber', 'ironbow', 'deep', 'rainbow']
+                        result_data = response.json()
+                        self.get_logger().info(f'Set colormap to {colormap_names[self.colormap_index]}. Server returned: {result_data}')
+                    else:
+                        self.get_logger().error(f'Colormap update failed with status {response.status_code}: {response.text}')
+                        
+                except Exception as e:
+                    self.get_logger().error(f'Failed to update colormap: {e}')
         return result
 
 
