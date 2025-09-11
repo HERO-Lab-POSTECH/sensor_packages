@@ -16,6 +16,8 @@ def launch_setup(context, *args, **kwargs):
     executable = 'ping360.py' if node_type == 'python' else 'ping360_node'
     
     # 릴레이 제어 노드 추가 (CH2 for Ping360)
+    from launch.actions import ExecuteProcess
+    
     relay_controller_path = os.path.join(
         os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
         'relay_controller',
@@ -23,15 +25,12 @@ def launch_setup(context, *args, **kwargs):
     )
     
     return [
-        Node(
-            package='ros2launch',
-            executable=sys.executable,
-            arguments=[relay_controller_path],
+        ExecuteProcess(
+            cmd=[sys.executable, relay_controller_path,
+                 '--ros-args',
+                 '-p', 'channel:=2',
+                 '-p', 'sensor_name:=Ping360'],
             name='relay_controller_ping360',
-            parameters=[{
-                'channel': 2,
-                'sensor_name': 'Ping360'
-            }],
             output='screen'
         ),
         Node(

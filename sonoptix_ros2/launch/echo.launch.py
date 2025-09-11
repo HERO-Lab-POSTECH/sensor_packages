@@ -143,21 +143,20 @@ def generate_launch_description():
                           output='screen')
     
     # 릴레이 제어 노드 추가 (CH1 for Sonoptix Echo)
+    from launch.actions import ExecuteProcess
+    
     relay_controller_path = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
         'relay_controller',
         'relay_node.py'
     )
     
-    relay_node = Node(
-        package='ros2launch',
-        executable=sys.executable,
-        arguments=[relay_controller_path],
+    relay_node = ExecuteProcess(
+        cmd=[sys.executable, relay_controller_path,
+             '--ros-args',
+             '-p', 'channel:=1',
+             '-p', 'sensor_name:=Sonoptix Echo'],
         name='relay_controller_sonoptix',
-        parameters=[{
-            'channel': 1,
-            'sensor_name': 'Sonoptix Echo'
-        }],
         output='screen'
     )
 
