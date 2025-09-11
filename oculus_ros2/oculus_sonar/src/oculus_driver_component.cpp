@@ -63,6 +63,16 @@ void OculusDriver::init() {
     "/sensor/sonar/oculus_m750d/metadata", 10);
   raw_data_pub_ = this->create_publisher<apl_msgs::msg::RawData>("/sensor/sonar/oculus_m750d/raw_data", 100);
   image_pub_ = this->create_publisher<sensor_msgs::msg::Image>("/sensor/sonar/oculus_m750d/raw", 10);  // rviz2 호환용
+  
+  // Create parameter publishers for recording
+  ping_rate_pub_ = this->create_publisher<std_msgs::msg::Int32>("/sensor/sonar/oculus_m750d/param/ping_rate", 10);
+  freq_mode_pub_ = this->create_publisher<std_msgs::msg::Int32>("/sensor/sonar/oculus_m750d/param/freq_mode", 10);
+  data_size_pub_ = this->create_publisher<std_msgs::msg::String>("/sensor/sonar/oculus_m750d/param/data_size", 10);
+  range_pub_ = this->create_publisher<std_msgs::msg::Float32>("/sensor/sonar/oculus_m750d/param/range", 10);
+  gain_pub_ = this->create_publisher<std_msgs::msg::Int32>("/sensor/sonar/oculus_m750d/param/gain", 10);
+  gamma_pub_ = this->create_publisher<std_msgs::msg::Int32>("/sensor/sonar/oculus_m750d/param/gamma", 10);
+  ip_address_pub_ = this->create_publisher<std_msgs::msg::String>("/sensor/sonar/oculus_m750d/param/ip_address", 10);
+  frame_id_pub_ = this->create_publisher<std_msgs::msg::String>("/sensor/sonar/oculus_m750d/param/frame_id", 10);
 
   RCLCPP_INFO(this->get_logger(), "Publishing data with frame = %s", frame_id_.c_str());
 
@@ -315,6 +325,41 @@ sensor_msgs::msg::Image OculusDriver::sonarToImage(
   image_msg.data = sonar_msg.intensities;
   
   return image_msg;
+}
+
+void OculusDriver::publishParameters() {
+  // Publish current parameters
+  std_msgs::msg::Int32 ping_rate_msg;
+  ping_rate_msg.data = this->get_parameter("ping_rate").as_int();
+  ping_rate_pub_->publish(ping_rate_msg);
+  
+  std_msgs::msg::Int32 freq_mode_msg;
+  freq_mode_msg.data = this->get_parameter("freq_mode").as_int();
+  freq_mode_pub_->publish(freq_mode_msg);
+  
+  std_msgs::msg::String data_size_msg;
+  data_size_msg.data = this->get_parameter("data_size").as_string();
+  data_size_pub_->publish(data_size_msg);
+  
+  std_msgs::msg::Float32 range_msg;
+  range_msg.data = static_cast<float>(this->get_parameter("range").as_double());
+  range_pub_->publish(range_msg);
+  
+  std_msgs::msg::Int32 gain_msg;
+  gain_msg.data = this->get_parameter("gain").as_int();
+  gain_pub_->publish(gain_msg);
+  
+  std_msgs::msg::Int32 gamma_msg;
+  gamma_msg.data = this->get_parameter("gamma").as_int();
+  gamma_pub_->publish(gamma_msg);
+  
+  std_msgs::msg::String ip_msg;
+  ip_msg.data = this->get_parameter("ip_address").as_string();
+  ip_address_pub_->publish(ip_msg);
+  
+  std_msgs::msg::String frame_id_msg;
+  frame_id_msg.data = this->get_parameter("frame_id").as_string();
+  frame_id_pub_->publish(frame_id_msg);
 }
 
 }  // namespace oculus_sonar

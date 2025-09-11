@@ -7,6 +7,8 @@
 #include <sensor_msgs/msg/laser_scan.hpp>
 #include <ping360_sonar_msgs/msg/sonar_echo.hpp>
 #include <rcl_interfaces/msg/set_parameters_result.hpp>
+#include <std_msgs/msg/int32.hpp>
+#include <std_msgs/msg/float32.hpp>
 
 #include <ping360_sonar/sector.h>
 #include <ping360_sonar/sonar_interface.h>
@@ -92,6 +94,17 @@ private:
   rclcpp::Publisher<ping360_sonar_msgs::msg::SonarEcho>::SharedPtr echo_pub;
   SonarEcho echo;
   void publishEcho(const rclcpp::Time &now);
+  
+  // parameter publishers for recording
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr gain_pub;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr frequency_pub;
+  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr range_max_pub;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr angle_sector_pub;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr angle_step_pub;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr speed_of_sound_pub;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr scan_threshold_pub;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr image_size_pub;
+  void publishParameters();
 };
 }
 

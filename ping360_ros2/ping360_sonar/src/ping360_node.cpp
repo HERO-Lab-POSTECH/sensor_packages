@@ -112,6 +112,19 @@ void Ping360Sonar::initPublishers(bool image, bool scan, bool echo)
 
   if(publish_scan && scan_pub == nullptr)
     scan_pub = create_publisher<sensor_msgs::msg::LaserScan>("/sensor/sonar/ping360/scan", qos);
+  
+  // Initialize parameter publishers if not already created
+  if(gain_pub == nullptr)
+  {
+    gain_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/gain", 10);
+    frequency_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/frequency", 10);
+    range_max_pub = create_publisher<std_msgs::msg::Float32>("/sensor/sonar/ping360/param/range_max", 10);
+    angle_sector_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/angle_sector", 10);
+    angle_step_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/angle_step", 10);
+    speed_of_sound_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/speed_of_sound", 10);
+    scan_threshold_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/scan_threshold", 10);
+    image_size_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/image_size", 10);
+  }
 }
 
 void Ping360Sonar::configureFromParams(const vector<rclcpp::Parameter> &new_params)
@@ -264,6 +277,45 @@ void Ping360Sonar::refresh()
 
   if(publish_scan && scan_pub->get_subscription_count())
     publishScan(now, end_turn);
+  
+  // Publish parameters for recording
+  publishParameters();
+}
+
+void Ping360Sonar::publishParameters()
+{
+  // Publish current parameters
+  std_msgs::msg::Int32 gain_msg;
+  gain_msg.data = get_parameter("gain").as_int();
+  gain_pub->publish(gain_msg);
+  
+  std_msgs::msg::Int32 frequency_msg;
+  frequency_msg.data = get_parameter("frequency").as_int();
+  frequency_pub->publish(frequency_msg);
+  
+  std_msgs::msg::Float32 range_max_msg;
+  range_max_msg.data = static_cast<float>(get_parameter("range_max").as_int());
+  range_max_pub->publish(range_max_msg);
+  
+  std_msgs::msg::Int32 angle_sector_msg;
+  angle_sector_msg.data = get_parameter("angle_sector").as_int();
+  angle_sector_pub->publish(angle_sector_msg);
+  
+  std_msgs::msg::Int32 angle_step_msg;
+  angle_step_msg.data = get_parameter("angle_step").as_int();
+  angle_step_pub->publish(angle_step_msg);
+  
+  std_msgs::msg::Int32 speed_msg;
+  speed_msg.data = get_parameter("speed_of_sound").as_int();
+  speed_of_sound_pub->publish(speed_msg);
+  
+  std_msgs::msg::Int32 scan_threshold_msg;
+  scan_threshold_msg.data = get_parameter("scan_threshold").as_int();
+  scan_threshold_pub->publish(scan_threshold_msg);
+  
+  std_msgs::msg::Int32 image_size_msg;
+  image_size_msg.data = get_parameter("image_size").as_int();
+  image_size_pub->publish(image_size_msg);
 }
 
 void Ping360Sonar::publishImage()

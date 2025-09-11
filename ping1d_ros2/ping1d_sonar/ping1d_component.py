@@ -39,9 +39,11 @@ class Ping1dComponent(Node):
     self.publisher_ = self.create_publisher(Range, "/sensor/sonar/ping1d/range", 10)
     self.dist_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/data", 10)
     self.speed_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/speed", 10)
-    self.interval_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/interval", 10)
-    self.gain_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/gain", 10)
-    self.mode_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/mode", 10)
+    self.interval_num_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/interval_num", 10)
+    self.gain_num_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/gain_num", 10)
+    self.mode_auto_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/mode_auto", 10)
+    self.scan_start_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/scan_start", 10)
+    self.scan_lenght_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/scan_lenght", 10)
     self.timer_ = self.create_timer(0.1, self.range_callback)
 
     ### Declare ROS 2 Parameter
@@ -107,6 +109,31 @@ class Ping1dComponent(Node):
 
     # speed_of_sound: Units: mm/s; The speed of sound in the measurement medium. ~1,500,000 mm/s for water.\n
     speed_sound = self.ping.get_speed_of_sound()
+    
+    # Publish parameters to topics for recording
+    speed_msg = Float32()
+    speed_msg.data = float(self.speed_)
+    self.speed_pub_.publish(speed_msg)
+    
+    gain_num_msg = Float32()
+    gain_num_msg.data = float(self.gain_num_)
+    self.gain_num_pub_.publish(gain_num_msg)
+    
+    interval_num_msg = Float32()
+    interval_num_msg.data = float(self.interval_num_)
+    self.interval_num_pub_.publish(interval_num_msg)
+    
+    mode_auto_msg = Float32()
+    mode_auto_msg.data = float(self.mode_auto_)
+    self.mode_auto_pub_.publish(mode_auto_msg)
+    
+    scan_start_msg = Float32()
+    scan_start_msg.data = float(self.scan_start_)
+    self.scan_start_pub_.publish(scan_start_msg)
+    
+    scan_lenght_msg = Float32()
+    scan_lenght_msg.data = float(self.scan_lenght_)
+    self.scan_lenght_pub_.publish(scan_lenght_msg)
     # print("speed_of_sound: %s\n" % (speed_sound["speed_of_sound"])) 
 
     # firmware_version_major: Firmware major version.\n
@@ -140,20 +167,8 @@ class Ping1dComponent(Node):
     # self.get_logger().info("Publishing range: {}".format(range_msg.range))
 
     dist_msg = Float32()
-    speed_msg = Float32()
-    interval_msg = Float32()
-    gain_msg = Float32()
-    mode_msg = Float32()
     dist_msg.data = float(simple_data["distance"]/1000)
-    speed_msg.data = float(speed_sound["speed_of_sound"]/1000)
-    interval_msg.data = float(interval["ping_interval"])
-    gain_msg.data = float(gain["gain_setting"])
-    mode_msg.data = float(mode_auto["mode_auto"])
     self.dist_pub_.publish(dist_msg)
-    self.speed_pub_.publish(speed_msg)
-    self.interval_pub_.publish(interval_msg)
-    self.gain_pub_.publish(gain_msg)
-    self.mode_pub_.publish(mode_msg)
 
   def set_param_callback(self, params):
         result = SetParametersResult(successful=True)

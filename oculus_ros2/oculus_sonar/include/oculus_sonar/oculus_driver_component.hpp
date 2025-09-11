@@ -18,6 +18,9 @@
 #include <rclcpp_components/register_node_macro.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <std_msgs/msg/int32.hpp>
+#include <std_msgs/msg/float32.hpp>
+#include <std_msgs/msg/string.hpp>
 
 #include "liboculus/SimplePingResult.h"
 #include "liboculus/StatusRx.h"
@@ -69,6 +72,8 @@ class OculusDriver : public rclcpp::Node {
       meta.tvg.push_back(ping.gains().at(i));
     }
     oculus_meta_pub_->publish(meta);
+    // Publish parameters for recording
+    publishParameters();
   }
 
  private:
@@ -130,6 +135,17 @@ class OculusDriver : public rclcpp::Node {
   rclcpp::Publisher<oculus_sonar_msgs::msg::OculusMetadata>::SharedPtr oculus_meta_pub_;
   rclcpp::Publisher<apl_msgs::msg::RawData>::SharedPtr raw_data_pub_;
   rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_pub_;
+  
+  // Parameter publishers for recording
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr ping_rate_pub_;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr freq_mode_pub_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr data_size_pub_;
+  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr range_pub_;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr gain_pub_;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr gamma_pub_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr ip_address_pub_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr frame_id_pub_;
+  void publishParameters();
 
   std::string ip_address_;
   std::string frame_id_;
