@@ -41,21 +41,22 @@ class RelayMonitor:
             3: "Livox MID360"
         }
         
-        # GPIO 초기화 - 이미 사용 중인 경우 정리 후 재설정
-        try:
-            GPIO.cleanup()
-        except:
-            pass
-        
+        # GPIO 초기화 - cleanup 하지 않음 (다른 프로세스 방해 방지)
         GPIO.setmode(GPIO.BOARD)
         GPIO.setwarnings(False)  # 경고 메시지 비활성화
         
-        for pin in self.RELAY_PINS.values():
+        self.gpio_available = {}
+        for ch, pin in self.RELAY_PINS.items():
             try:
                 GPIO.setup(pin, GPIO.OUT)
+                self.gpio_available[ch] = True
             except Exception as e:
-                print(f"핀 {pin} 설정 오류 (이미 사용 중일 수 있음): {e}")
-                # 이미 설정된 핀이어도 계속 진행
+                print(f"CH{ch} (Pin {pin}): 다른 프로세스가 사용 중 - 읽기만 가능")
+                self.gpio_available[ch] = False
+                try:
+                    GPIO.setup(pin, GPIO.IN)  # 읽기 모드로 시도
+                except:
+                    pass
         
         # 실행 플래그
         self.running = True
@@ -80,33 +81,59 @@ class RelayMonitor:
     def get_relay_status(self, channel):
         """릴레이 상태 확인"""
         pin = self.RELAY_PINS[channel]
-        return "ON " if GPIO.input(pin) else "OFF"
+        try:
+            return "ON " if GPIO.input(pin) else "OFF"
+        except:
+            return "???"
     
     def toggle_relay(self, channel):
         """릴레이 토글"""
+        if not self.gpio_available.get(channel, False):
+            return  # 사용 불가능한 채널은 무시
         pin = self.RELAY_PINS[channel]
-        current_state = GPIO.input(pin)
-        GPIO.output(pin, not current_state)
+        try:
+            current_state = GPIO.input(pin)
+            GPIO.output(pin, not current_state)
+        except:
+            pass
     
     def relay_on(self, channel):
         """릴레이 ON"""
+        if not self.gpio_available.get(channel, False):
+            return
         pin = self.RELAY_PINS[channel]
-        GPIO.output(pin, GPIO.HIGH)
+        try:
+            GPIO.output(pin, GPIO.HIGH)
+        except:
+            pass
     
     def relay_off(self, channel):
         """릴레이 OFF"""
+        if not self.gpio_available.get(channel, False):
+            return
         pin = self.RELAY_PINS[channel]
-        GPIO.output(pin, GPIO.LOW)
+        try:
+            GPIO.output(pin, GPIO.LOW)
+        except:
+            pass
     
     def all_on(self):
         """모든 릴레이 ON"""
-        for pin in self.RELAY_PINS.values():
-            GPIO.output(pin, GPIO.HIGH)
+        for ch, pin in self.RELAY_PINS.items():
+            if self.gpio_available.get(ch, False):
+                try:
+                    GPIO.output(pin, GPIO.HIGH)
+                except:
+                    pass
     
     def all_off(self):
         """모든 릴레이 OFF"""
-        for pin in self.RELAY_PINS.values():
-            GPIO.output(pin, GPIO.LOW)
+        for ch, pin in self.RELAY_PINS.items():
+            if self.gpio_available.get(ch, False):
+                try:
+                    GPIO.output(pin, GPIO.LOW)
+                except:
+                    pass
     
     def display_status(self):
         """상태 화면 표시"""
@@ -120,16 +147,23 @@ class RelayMonitor:
         for ch, name in self.SENSOR_NAMES.items():
             status = self.get_relay_status(ch)
             pin = self.RELAY_PINS[ch]
-            mark = "●" if status == "ON " else "○"
-            stat = "ON " if status == "ON " else "OFF"
-            print(f" CH{ch}(P{pin:2d}) {mark} {stat} {name}")
+            mark = "●" if status == "ON " else "○" if status == "OFF" else "?"
+            stat = status
+            ctrl = "[R]" if not self.gpio_available.get(ch, False) else "   "
+            print(f" CH{ch}(P{pin:2d}) {mark} {stat} {name} {ctrl}")
         
         print("-" * 40)
         
         # 제어 키
-        print(" [1/2/3] 토글  [Q/W/E] ON  [A/S/D] OFF")
-        print(" [7] 모두ON  [8] 모두OFF  [0/ESC] 종료")
+        if any(self.gpio_available.values()):
+            print(" [1/2/3] 토글  [Q/W/E] ON  [A/S/D] OFF")
+            print(" [7] 모두ON  [8] 모두OFF  [0/ESC] 종료")
+        else:
+            print(" * 모든 채널이 사용 중 - 읽기 전용 모드")
+            print(" * [0/ESC] 종료")
         print("-" * 40)
+        if not all(self.gpio_available.values()):
+            print(" [R] = 읽기 전용 (다른 프로세스 사용 중)")
     
     def keyboard_listener(self):
         """키보드 입력 처리 스레드"""
@@ -228,17 +262,17 @@ class RelayMonitor:
         
         # 화면 클리어 및 상태 표시
         self.clear_screen()
-        print("\n🔌 릴레이 모니터링 종료")
+        print("\n릴레이 모니터링 종료")
         print("-" * 40)
         print("최종 릴레이 상태:")
         for ch, name in self.SENSOR_NAMES.items():
             status = self.get_relay_status(ch)
-            print(f"  CH{ch}: {status} - {name}")
+            ctrl_info = "(제어됨)" if self.gpio_available.get(ch, False) else "(읽기전용)"
+            print(f"  CH{ch}: {status} - {name} {ctrl_info}")
         print("-" * 40)
         
-        # GPIO 정리 (릴레이는 현재 상태 유지)
-        # GPIO.cleanup()를 호출하지 않음 - 릴레이 상태 유지
-        print("릴레이는 현재 상태를 유지합니다.")
+        # GPIO는 cleanup하지 않음 - 다른 프로세스 방해 방지
+        print("* GPIO 상태 유지 (다른 프로세스 보호)")
         print()
 
 
