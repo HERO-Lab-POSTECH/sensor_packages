@@ -1,0 +1,18 @@
+[1.070s] Invoking command in '/home/hero/ros2_ws/src/sensor_packages/build/sonoptix_ros2': PYTHONPATH=/home/hero/ros2_ws/src/sensor_packages/build/sonoptix_ros2/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/hero/ros2_ws/src/sensor_packages/install/sonoptix_ros2/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/hero/ros2_ws/src/sensor_packages/build/sonoptix_ros2/build --no-deps symlink_data
+[1.505s] running develop
+[1.758s] running egg_info
+[1.758s] writing sonoptix_ros2.egg-info/PKG-INFO
+[1.759s] writing dependency_links to sonoptix_ros2.egg-info/dependency_links.txt
+[1.759s] writing entry points to sonoptix_ros2.egg-info/entry_points.txt
+[1.759s] writing requirements to sonoptix_ros2.egg-info/requires.txt
+[1.759s] writing top-level names to sonoptix_ros2.egg-info/top_level.txt
+[1.762s] reading manifest file 'sonoptix_ros2.egg-info/SOURCES.txt'
+[1.763s] writing manifest file 'sonoptix_ros2.egg-info/SOURCES.txt'
+[1.765s] running build_ext
+[1.766s] Creating /home/hero/ros2_ws/src/sensor_packages/install/sonoptix_ros2/lib/python3.10/site-packages/sonoptix-ros2.egg-link (link to .)
+[1.767s] Installing echo script to /home/hero/ros2_ws/src/sensor_packages/install/sonoptix_ros2/lib/sonoptix_ros2
+[1.768s] Installing echo_imager script to /home/hero/ros2_ws/src/sensor_packages/install/sonoptix_ros2/lib/sonoptix_ros2
+[1.768s] 
+[1.768s] Installed /home/hero/ros2_ws/src/sensor_packages/build/sonoptix_ros2
+[1.768s] running symlink_data
+[1.849s] Invoked command in '/home/hero/ros2_ws/src/sensor_packages/build/sonoptix_ros2' returned '0': PYTHONPATH=/home/hero/ros2_ws/src/sensor_packages/build/sonoptix_ros2/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/hero/ros2_ws/src/sensor_packages/install/sonoptix_ros2/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/hero/ros2_ws/src/sensor_packages/build/sonoptix_ros2/build --no-deps symlink_data

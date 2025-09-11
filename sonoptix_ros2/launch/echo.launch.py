@@ -41,8 +41,14 @@ def generate_launch_description():
     
     declare_range = DeclareLaunchArgument(
         'range',
-        default_value='10',  # 최대 범위로 설정
-        description='Sonar range in meters'
+        default_value='10',
+        description='Sonar range in meters (minimum 3m)'
+    )
+    
+    declare_operation_mode = DeclareLaunchArgument(
+        'operation_mode',
+        default_value='0',
+        description='Operation mode (0-3, likely frequency selection)'
     )
     
     declare_tx_mode = DeclareLaunchArgument(
@@ -90,6 +96,7 @@ def generate_launch_description():
     # Get launch configurations
     ip = LaunchConfiguration('ip')
     sonar_range = LaunchConfiguration('range')
+    operation_mode = LaunchConfiguration('operation_mode')
     tx_mode = LaunchConfiguration('tx_mode')
     power_state = LaunchConfiguration('power_state')
     data_topic = LaunchConfiguration('data_topic')
@@ -110,6 +117,7 @@ def generate_launch_description():
                      parameters=[{
                          'ip': ip,
                          'range': sonar_range,
+                         'operation_mode': operation_mode,
                          'tx_mode': tx_mode,
                          'power_state': power_state,
                          'topic': data_topic,
@@ -135,6 +143,7 @@ def generate_launch_description():
     return LaunchDescription([
         declare_ip,
         declare_range,
+        declare_operation_mode,
         declare_tx_mode,
         declare_power_state,
         declare_data_topic,

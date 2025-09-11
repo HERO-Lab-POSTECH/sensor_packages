@@ -56,10 +56,11 @@ class EchoNode(Node):
         # --- Parameters ---
         # Declare and get parameters for the node.
         params = {
-            'range': [50, int],  # 최대 범위로 설정
+            'range': [3, int],  # 기본 3m (최소값이 3m인 것 같음)
             'ip': ['192.168.0.203', str],  # 현재 센서 IP로 업데이트
             'tx_mode': ['auto', str],
             'power_state': [True, bool],
+            'operation_mode': [0, int],  # 0: 400kHz, 1: 700kHz (추정)
             'topic': ['/sensor/sonar/sonoptix/data', str],
             'frame_id': ['echo', str],
         }
@@ -99,31 +100,71 @@ class EchoNode(Node):
         requests.patch(self.api_url + '/transponder',
                      json={
                            "enable": self.power_state,
-                           "sonar_range": float(self.range)
+                           "sonar_range": float(self.range),
+                           "operation_mode": self.operation_mode
                        })
 
         # Note: RTSP stream is automatically available when transponder is enabled
 
         # Initialize CV bridge, video capture, and ros2 publisher
         self.br = CvBridge()
-        self.get_logger().info(f'Accessing RTSP stream')
-        self.cap = cv2.VideoCapture(self.rtsp_url)
         self.publisher = self.create_publisher(Image, self.topic, SENSOR_QOS,
-                                               qos_overriding_options=qos_override_opts) 
-        self.get_logger().info(f'Sonoptix Echo Initialized')
+                                               qos_overriding_options=qos_override_opts)
+        
+        # RTSP 연결 재시도 로직
+        self.cap = None
+        self.connect_rtsp(initial=True)
 
         # Read and publish sonar data when available
+        self.last_frame_time = self.get_clock().now()
+        reconnect_timeout = 5.0  # 5초 동안 프레임이 없으면 재연결
+        
         try:
             while True:
                 if not self.power_state:
                     rclpy.spin_once(self, timeout_sec=1.0)
                     continue
+                
+                # RTSP 연결 상태 확인
+                if self.cap is None or not self.cap.isOpened():
+                    self.get_logger().warn('RTSP disconnected, attempting to reconnect...')
+                    if not self.connect_rtsp():
+                        rclpy.spin_once(self, timeout_sec=5.0)
+                        continue
+                
                 ret, frame = self.cap.read()
                 if not ret:
+                    # 프레임 읽기 실패 - 타임아웃 체크
+                    current_time = self.get_clock().now()
+                    time_diff = (current_time - self.last_frame_time).nanoseconds / 1e9
+                    
+                    if time_diff > reconnect_timeout:
+                        self.get_logger().warn(f'No frames for {time_diff:.1f}s, reconnecting RTSP...')
+                        self.connect_rtsp()
+                        self.last_frame_time = current_time
                     continue
+                
+                # 프레임 수신 성공
+                self.last_frame_time = self.get_clock().now()
+                
+                # 프레임 정보 로깅 (디버깅용 - 나중에 제거 가능)
+                if not hasattr(self, 'last_shape') or self.last_shape != frame.shape:
+                    self.get_logger().info(f'Frame shape changed: {frame.shape}')
+                    self.last_shape = frame.shape
                     
                 # Raw data 보존 - 필터링 없이 원본 그대로
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                # 프레임이 이미 grayscale인지 확인
+                if len(frame.shape) == 3 and frame.shape[2] == 3:
+                    try:
+                        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                    except Exception as e:
+                        self.get_logger().error(f'Color conversion failed: {e}')
+                        continue
+                elif len(frame.shape) == 2:
+                    pass  # Already grayscale
+                else:
+                    self.get_logger().warn(f'Unexpected frame shape: {frame.shape}')
+                    continue
                 
                 # 범위 정보를 메타데이터로 저장
                 frame[0, 0] = self.range
@@ -139,11 +180,46 @@ class EchoNode(Node):
                 rclpy.spin_once(self, timeout_sec=0.01)
         finally:
             # Stop the transponder before destroying the node
-            requests.put(self.api_url + '/transceiver', json={"power_state": 'off',})
+            requests.patch(self.api_url + '/transponder', json={"enable": False})
             self.get_logger().info(f'Transceiver disabled')
             self.destroy_node()
             rclpy.shutdown()
 
+    def connect_rtsp(self, initial=False):
+        """RTSP 스트림 연결"""
+        try:
+            self.get_logger().info(f'Accessing RTSP stream')
+            if self.cap is not None:
+                self.cap.release()
+                
+            # 기본 백엔드 사용
+            self.cap = cv2.VideoCapture(self.rtsp_url)
+            self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+            # 연결 타임아웃 설정 시도
+            self.cap.set(cv2.CAP_PROP_OPEN_TIMEOUT_MSEC, 10000)  # 10초 타임아웃
+            self.cap.set(cv2.CAP_PROP_READ_TIMEOUT_MSEC, 10000)
+            
+            # 짧은 대기 후 연결 확인
+            rclpy.spin_once(self, timeout_sec=1.0)
+            
+            # 연결 확인 - 실제 프레임을 읽어봄
+            for _ in range(3):  # 3번 시도
+                ret, test_frame = self.cap.read()
+                if ret and test_frame is not None:
+                    self.get_logger().info('RTSP stream connected successfully')
+                    self.last_frame_time = self.get_clock().now()
+                    return True
+                rclpy.spin_once(self, timeout_sec=0.5)
+                
+            self.get_logger().warn('RTSP connected but no frames received')
+                
+        except Exception as e:
+            self.get_logger().error(f'RTSP connection error: {e}')
+        
+        if initial:
+            self.get_logger().error('Failed to connect to RTSP stream')
+        return False
+    
     def set_param_callback(self, params):
         """
         This function is the callback for when parameters are changed.
@@ -160,14 +236,22 @@ class EchoNode(Node):
                 self.get_logger().info(f'Updated {param.name}: {param.value}')
 
             # Configure sonar if necessary
-            if param.name in ['range', 'power_state']:
-                state = 'on' if self.power_state else 'off'
-                requests.put(self.api_url + '/transceiver',
+            if param.name in ['range', 'power_state', 'operation_mode']:
+                # Sonoptix Echo는 3m 미만에서 RTSP 프레임을 보내지 않음
+                if param.name == 'range' and self.range < 3:
+                    self.get_logger().warn(f'Range {self.range}m is below minimum (3m). Setting to 3m.')
+                    self.range = 3
+                    
+                requests.patch(self.api_url + '/transponder',
                              json={
-                                "power_state": state,
-                                "range": self.range,
-                                "tx_mode": self.tx_mode
+                                "enable": self.power_state,
+                                "sonar_range": float(self.range),
+                                "operation_mode": self.operation_mode
                              })
+                # Range 또는 operation_mode 변경 시 RTSP 스트림 재연결
+                if param.name in ['range', 'operation_mode']:
+                    self.get_logger().info(f'Reconnecting RTSP stream for new settings')
+                    self.connect_rtsp()
         return result
 
 
