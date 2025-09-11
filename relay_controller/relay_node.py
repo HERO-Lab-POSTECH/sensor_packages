@@ -5,10 +5,13 @@ ROS2 릴레이 제어 노드
 - CH1 (Pin 40): Sonoptix Echo 
 - CH2 (Pin 33): Ping360
 - CH3 (Pin 37): Livox MID360
+
+주의: 이 릴레이 보드는 LOW=ON, HIGH=OFF (Active Low)
 """
 
 import sys
 import signal
+import atexit
 import rclpy
 from rclpy.node import Node
 
@@ -45,52 +48,72 @@ class RelayControllerNode(Node):
             sys.exit(1)
         
         self.relay_pin = self.RELAY_PINS[self.channel]
+        self.cleaned_up = False
         
         # GPIO 초기화
         GPIO.setmode(GPIO.BOARD)
-        GPIO.setup(self.relay_pin, GPIO.OUT)
+        GPIO.setwarnings(False)
         
-        # 릴레이 ON
-        GPIO.output(self.relay_pin, GPIO.HIGH)
+        try:
+            GPIO.setup(self.relay_pin, GPIO.OUT, initial=GPIO.HIGH)  # 초기값 HIGH (OFF)
+        except:
+            # 이미 사용 중이면 정리 후 재설정
+            GPIO.cleanup(self.relay_pin)
+            GPIO.setup(self.relay_pin, GPIO.OUT, initial=GPIO.HIGH)
+        
+        # 릴레이 ON (LOW = ON for Active Low relay)
+        GPIO.output(self.relay_pin, GPIO.LOW)
         self.get_logger().info(f"✅ 릴레이 CH{self.channel} (Pin {self.relay_pin}) ON - {self.sensor_name}")
         
-        # 시그널 핸들러 설정
+        # 종료 핸들러 등록 (여러 방법으로 등록하여 확실하게 처리)
+        atexit.register(self.cleanup)
         signal.signal(signal.SIGINT, self._signal_handler)
         signal.signal(signal.SIGTERM, self._signal_handler)
     
     def _signal_handler(self, signum, frame):
         """시그널 핸들러 - 종료 시 릴레이 OFF"""
-        self.get_logger().info(f"종료 시그널 수신 - 릴레이 CH{self.channel} OFF")
         self.cleanup()
-        sys.exit(0)
+        # 즉시 종료
+        import os
+        os._exit(0)
     
     def cleanup(self):
         """GPIO 정리 및 릴레이 OFF"""
+        if self.cleaned_up:
+            return
+        
         try:
-            GPIO.output(self.relay_pin, GPIO.LOW)
-            self.get_logger().info(f"❌ 릴레이 CH{self.channel} (Pin {self.relay_pin}) OFF - {self.sensor_name}")
-            GPIO.cleanup(self.relay_pin)
-        except:
-            pass
+            # 릴레이 OFF (HIGH = OFF for Active Low relay)
+            GPIO.output(self.relay_pin, GPIO.HIGH)
+            print(f"❌ 릴레이 CH{self.channel} (Pin {self.relay_pin}) OFF - {self.sensor_name}")
+            self.cleaned_up = True
+        except Exception as e:
+            print(f"릴레이 OFF 실패: {e}")
 
 
 def main(args=None):
-    rclpy.init(args=args)
-    
+    node = None
     try:
+        rclpy.init(args=args)
         node = RelayControllerNode()
         rclpy.spin(node)
     except KeyboardInterrupt:
-        pass
+        print("\nCtrl+C 수신")
     except Exception as e:
         print(f"오류 발생: {e}")
     finally:
         # 정리
-        if 'node' in locals():
+        if node:
             node.cleanup()
-            node.destroy_node()
-        if rclpy.ok():
-            rclpy.shutdown()
+            try:
+                node.destroy_node()
+            except:
+                pass
+        try:
+            if rclpy.ok():
+                rclpy.shutdown()
+        except:
+            pass
 
 
 if __name__ == '__main__':
