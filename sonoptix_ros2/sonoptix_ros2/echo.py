@@ -90,7 +90,7 @@ class EchoNode(Node):
             self.set_param_callback)
 
         self.rtsp_url = f'rtsp://{self.ip}:8554/raw'
-        self.api_url = f'http://{self.ip}:8000/api/v2'
+        self.api_url = f'http://{self.ip}:8000/api/v1'
 
         self.get_logger().info(f'Configuring Sonar')
 
