@@ -41,10 +41,21 @@ class RelayMonitor:
             3: "Livox MID360"
         }
         
-        # GPIO 초기화
+        # GPIO 초기화 - 이미 사용 중인 경우 정리 후 재설정
+        try:
+            GPIO.cleanup()
+        except:
+            pass
+        
         GPIO.setmode(GPIO.BOARD)
+        GPIO.setwarnings(False)  # 경고 메시지 비활성화
+        
         for pin in self.RELAY_PINS.values():
-            GPIO.setup(pin, GPIO.OUT)
+            try:
+                GPIO.setup(pin, GPIO.OUT)
+            except Exception as e:
+                print(f"핀 {pin} 설정 오류 (이미 사용 중일 수 있음): {e}")
+                # 이미 설정된 핀이어도 계속 진행
         
         # 실행 플래그
         self.running = True
