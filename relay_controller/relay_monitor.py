@@ -101,36 +101,59 @@ class RelayMonitor:
         """상태 화면 표시"""
         self.clear_screen()
         
+        # 터미널 크기 가져오기
+        try:
+            rows, cols = os.popen('stty size', 'r').read().split()
+            term_width = min(int(cols), 80)  # 최대 80자로 제한
+        except:
+            term_width = 60  # 기본값
+        
+        # 동적 너비 계산
+        line_width = term_width - 4
+        header_line = "=" * line_width
+        sub_line = "-" * (line_width - 2)
+        
         # 헤더
-        print("="*60)
-        print("           🔌 릴레이 실시간 모니터링 & 제어 🔌")
-        print("="*60)
-        print(f"  현재 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print("="*60)
+        print(header_line)
+        title = "릴레이 모니터링 & 제어"
+        print(title.center(line_width))
+        print(header_line)
+        current_time = f"시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        print(current_time.center(line_width))
+        print(header_line)
         print()
         
         # 릴레이 상태
-        print("  📊 릴레이 상태")
-        print("  " + "-"*56)
+        print("  [릴레이 상태]")
+        print("  " + sub_line)
         for ch, name in self.SENSOR_NAMES.items():
             status = self.get_relay_status(ch)
-            status_icon = "🟢" if status == "ON " else "🔴"
+            status_str = "ON " if status == "ON " else "OFF"
             pin = self.RELAY_PINS[ch]
-            print(f"  {status_icon} CH{ch} (Pin {pin:2d}): [{status}] - {name}")
+            status_mark = "[●]" if status == "ON " else "[○]"
+            print(f"  CH{ch} (Pin {pin:2d}): {status_mark} {status_str} - {name}")
         print()
         
-        # 제어 메뉴
-        print("  ⌨️  키보드 제어")
-        print("  " + "-"*56)
-        print("  [1] CH1 토글     [Q] CH1 ON      [A] CH1 OFF")
-        print("  [2] CH2 토글     [W] CH2 ON      [S] CH2 OFF")
-        print("  [3] CH3 토글     [E] CH3 ON      [D] CH3 OFF")
+        # 제어 메뉴 (컴팩트 버전)
+        print("  [키보드 제어]")
+        print("  " + sub_line)
+        
+        if term_width >= 70:
+            # 넓은 화면
+            print("  토글: [1] CH1  [2] CH2  [3] CH3")
+            print("  ON  : [Q] CH1  [W] CH2  [E] CH3")
+            print("  OFF : [A] CH1  [S] CH2  [D] CH3")
+        else:
+            # 좁은 화면
+            print("  토글: 1(CH1) 2(CH2) 3(CH3)")
+            print("  ON  : Q(CH1) W(CH2) E(CH3)")
+            print("  OFF : A(CH1) S(CH2) D(CH3)")
+        
         print()
-        print("  [7] 모든 릴레이 ON     [8] 모든 릴레이 OFF")
-        print()
-        print("  [ESC] 또는 [0] 종료")
-        print("="*60)
-        print("  대기 중... (키를 누르세요)")
+        print("  전체: [7] 모두 ON  [8] 모두 OFF")
+        print("  종료: [ESC] 또는 [0]")
+        print(header_line)
+        print("  대기 중...")
     
     def keyboard_listener(self):
         """키보드 입력 처리 스레드"""
