@@ -118,7 +118,7 @@ ros2 run sonoptix_ros2 echo
 **Subscribed Topics**: `/sensor/sonar/sonoptix/compressed` or `/sensor/sonar/sonoptix/data`
 
 **Published Topics**: 
-- `/sonar/echo/image` (`sensor_msgs/Image`, Processed polar image)
+- `/sensor/sonar/sonoptix/image` (`sensor_msgs/Image`, Processed polar image)
 - `/sensor/sonar/sonoptix/param/contrast` (`std_msgs/Float32`, Current contrast parameter)
 
 **Parameters**: The parameters can be updated while running the node.
@@ -126,7 +126,7 @@ ros2 run sonoptix_ros2 echo
 | Name           | Type   | Default              | Description                               |
 |----------------|--------|----------------------|-------------------------------------------|
 | `data_topic`   | str    | `/sensor/sonar/sonoptix/compressed`    | Input topic for sonar data (raw or compressed) |
-| `image_topic`  | str    | `/sonar/echo/image`   | Output topic for visualized image         |
+| `image_topic`  | str    | `/sensor/sonar/sonoptix/image`   | Output topic for visualized image         |
 | `contrast`     | float  | `10.0`               | Contrast multiplier for visualization     |
 | `bag_file`     | str    |                      | Optional path to an input ros2 bag file with sonar data |
 | `video_file`   | str    |                      | Optional path to an output mp4 video file |

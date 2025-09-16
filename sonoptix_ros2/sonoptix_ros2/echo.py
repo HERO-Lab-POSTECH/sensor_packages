@@ -175,7 +175,7 @@ class EchoNode(Node):
                 self.get_logger().info(f'Updated {param.name}: {param.value}')
 
             # Configure sonar if necessary
-            if param.name in ['range', 'power_state']:
+            if param.name in ['range', 'power_state', 'tx_mode']:
                 state = 'on' if self.power_state else 'off'
                 requests.put(self.api_url + '/transceiver',
                              json={
