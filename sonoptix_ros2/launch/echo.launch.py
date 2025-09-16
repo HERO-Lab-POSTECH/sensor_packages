@@ -34,6 +34,7 @@ def generate_launch_description():
     sonar_range = 12  # meters
     data_topic = '/sensor/sonar/sonoptix/data'
     compressed_topic = '/sensor/sonar/sonoptix/compressed'
+    image_topic = '/sensor/sonar/sonoptix/image'
     # QoS Config
     reliability = 'best_effort'
 
@@ -58,5 +59,16 @@ def generate_launch_description():
                               f'qos_overrides.{compressed_topic}.publisher.reliability': reliability
                           }],
                           output='screen')
+    
+    echo_imager = Node(package='sonoptix_ros2',
+                       executable='echo_imager',
+                       parameters=[{
+                           'data_topic': data_topic,
+                           'image_topic': image_topic,
+                           'contrast': 10.0,
+                           f'qos_overrides.{data_topic}.subscription.reliability': reliability,
+                           f'qos_overrides.{image_topic}.publisher.reliability': reliability
+                       }],
+                       output='screen')
 
-    return LaunchDescription([echo_data, echo_transport])
+    return LaunchDescription([echo_data, echo_transport, echo_imager])
