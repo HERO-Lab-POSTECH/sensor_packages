@@ -39,6 +39,7 @@ from rclpy.qos_overriding_options import QoSOverridingOptions
 import cv2
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
+from std_msgs.msg import Int32, String, Bool
 
 import requests
 
@@ -57,7 +58,7 @@ class EchoNode(Node):
         # Declare and get parameters for the node.
         params = {
             'range': [50, int],
-            'ip': ['192.168.2.42', str],
+            'ip': ['192.168.0.203', str],
             'tx_mode': ['auto', str],
             'power_state': [True, bool],
             'topic': ['/sensor/sonar/sonoptix/data', str],
@@ -107,7 +108,14 @@ class EchoNode(Node):
         self.get_logger().info(f'Accessing RTSP stream')
         self.cap = cv2.VideoCapture(self.rtsp_url)
         self.publisher = self.create_publisher(Image, self.topic, SENSOR_QOS,
-                                               qos_overriding_options=qos_override_opts) 
+                                               qos_overriding_options=qos_override_opts)
+        
+        # Create parameter publishers for recording
+        self.range_pub = self.create_publisher(Int32, '/sensor/sonar/sonoptix/param/range', 10)
+        self.tx_mode_pub = self.create_publisher(String, '/sensor/sonar/sonoptix/param/tx_mode', 10)
+        self.power_state_pub = self.create_publisher(Bool, '/sensor/sonar/sonoptix/param/power_state', 10)
+        self.frame_id_pub = self.create_publisher(String, '/sensor/sonar/sonoptix/param/frame_id', 10)
+        
         self.get_logger().info(f'Sonoptix Echo Initialized')
 
         # Read and publish sonar data when available
@@ -124,6 +132,23 @@ class EchoNode(Node):
                 frame.header.frame_id = self.frame_id
 
                 self.publisher.publish(frame)
+                
+                # Publish parameters for recording
+                range_msg = Int32()
+                range_msg.data = self.range
+                self.range_pub.publish(range_msg)
+                
+                tx_mode_msg = String()
+                tx_mode_msg.data = self.tx_mode
+                self.tx_mode_pub.publish(tx_mode_msg)
+                
+                power_state_msg = Bool()
+                power_state_msg.data = self.power_state
+                self.power_state_pub.publish(power_state_msg)
+                
+                frame_id_msg = String()
+                frame_id_msg.data = self.frame_id
+                self.frame_id_pub.publish(frame_id_msg)
 
                 # Allow for params callback to be processed
                 rclpy.spin_once(self, timeout_sec=0.01)

@@ -41,6 +41,7 @@ import os
 import cv2
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image, CompressedImage
+from std_msgs.msg import Float32
 
 from rosbag2_py import SequentialReader, StorageOptions, ConverterOptions
 from rclpy.serialization import deserialize_message
@@ -111,7 +112,9 @@ class EchoImager(Node):
         if len(self.video_file) == 0 and not self.from_bag:
             self.to_video = False
             self.publisher = self.create_publisher(Image, self.image_topic, SENSOR_QOS,
-                                                   qos_overriding_options=qos_override_opts) 
+                                                   qos_overriding_options=qos_override_opts)
+            # Create parameter publisher for contrast
+            self.contrast_pub = self.create_publisher(Float32, '/sensor/sonar/sonoptix/param/contrast', 10)
             self.get_logger().info("Publishing data to ros2 topic")
         else:
             if len(self.video_file) == 0:
@@ -181,6 +184,11 @@ class EchoImager(Node):
         else:
             # If not saving to video, publish the frame as a ROS 2 message
             self.publisher.publish(self.br.cv2_to_imgmsg(scan_image))
+            
+            # Publish contrast parameter
+            contrast_msg = Float32()
+            contrast_msg.data = self.contrast
+            self.contrast_pub.publish(contrast_msg)
 
     def process_bag(self):
         """

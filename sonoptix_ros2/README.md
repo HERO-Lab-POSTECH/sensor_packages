@@ -31,7 +31,7 @@ This package contains two main nodes:
 * **`echo_imager.py`**: A processing node that subscribes to the raw sonar data, converts it into a polar (fan-shaped) image, and can either publish this image on a new topic or save it to a video file. This node can also process data from a ROS 2 bag file.
 
 ## Installation
-To install the [sonoptix_sonar]((https://github.com/itskalvik/sonoptix_sonar) ) package, clone this repository into your ROS 2 workspace and build it using `colcon`:
+To install the [sonoptix_ros2](https://github.com/itskalvik/sonoptix_sonar) package, clone this repository into your ROS 2 workspace and build it using `colcon`:
 
 ```bash
 cd ~/ros2_ws/src
@@ -48,38 +48,35 @@ source install/setup.bash
 
 ### `echo.launch.py`
 
-Launches the [echo](#echo) node to publish sonar data and compresses the data stream for efficient transport.
-The [echo](#echo) node publisher with `best_effort` reliability QoS setting, this can be changed from the launch file or using the `ros2 param set` command.
+**Description**: Launches the echo node with compressed image transport.
 
-**Published Topics**:
-- Raw sonar data: `/sonar/echo/data` (`sensor_msgs/Image`)
-- Compressed sonar data: `/sonar/echo/compressed` (`sensor_msgs/CompressedImage`)
-
-**Run Example**:
-
+**Launch Command**:
 ```bash
-ros2 launch sonoptix_sonar echo.launch.py
+ros2 launch sonoptix_ros2 echo.launch.py
 ```
 
-Use the following command to upate the range setting:
+**Parameters**:
+- `sonar_range`: Sonar range in meters (default: 12)
+- `data_topic`: Topic name for raw sonar data (default: `/sensor/sonar/sonoptix/data`)
+- `compressed_topic`: Topic name for compressed data (default: `/sensor/sonar/sonoptix/compressed`)
+- `compression_level`: PNG compression level 1-9 (default: 1)
+- `reliability`: QoS reliability setting (default: 'best_effort')
 
-```bash
-ros2 param set /echo range:=<[3 - 200] integer value>
-```
+---
 
 ### `echo_decompress.launch.py`
 
-Decompresses the previously compressed sonar echo data for downstream processing or visualization. This node is usually used when processing sonar data from a bag file.
+**Description**: Launches a node to decompress the compressed sonar data for visualization.
 
-**Subscribed Topics**: `/sonar/echo/compressed`
-
-**Published Topics**:  `/sonar/echo/data` (`sensor_msgs/Image`)
-
-**Run Example**:
-
+**Launch Command**:
 ```bash
-ros2 launch sonoptix_sonar decompress.launch.py
+ros2 launch sonoptix_ros2 echo_decompress.launch.py
 ```
+
+**Parameters**:
+- `data_topic`: Output topic for decompressed data (default: `/sensor/sonar/sonoptix/data`)
+- `compressed_topic`: Input topic for compressed data (default: `/sensor/sonar/sonoptix/compressed`)
+- `reliability`: QoS reliability setting (default: 'best_effort')
 
 ---
 
@@ -89,22 +86,27 @@ ros2 launch sonoptix_sonar decompress.launch.py
 
 **Description**: Publishes sonar profiles from the Sonoptix Echo.
 
-**Published Topics**: `/sonar/echo/data` (`sensor_msgs/Image`)
+**Published Topics**: 
+- `/sensor/sonar/sonoptix/data` (`sensor_msgs/Image`, Raw Sonar Data)
+- `/sensor/sonar/sonoptix/param/range` (`std_msgs/Int32`, Current range parameter)
+- `/sensor/sonar/sonoptix/param/tx_mode` (`std_msgs/String`, Current tx_mode parameter)
+- `/sensor/sonar/sonoptix/param/power_state` (`std_msgs/Bool`, Current power state)
+- `/sensor/sonar/sonoptix/param/frame_id` (`std_msgs/String`, Current frame ID)
 
 **Parameters**: The parameters can be updated while running the node.
 
 | Name                 | Type    | Default            | Description                              |
 |----------------------|---------|--------------------|------------------------------------------|
 | `range`              | int     | 50                 | Sonar range in meters [3-200]            |
-| `ip`                 | str     | "192.168.2.42"     | IP address of the sonar device           |
+| `ip`                 | str     | "192.168.0.203"    | IP address of the sonar device           |
 | `tx_mode`            | str     | "auto"             | The transmit mode of the transceiver [`auto`, `hf`, `lf`, `lflr`] |
 | `power_state`        | bool    | `True`             | The power state of the transceiver       |
-| `topic`              | str     | `/sonar/echo/data` | Topic to publish sonar frames            |
+| `topic`              | str     | `/sensor/sonar/sonoptix/data` | Topic to publish sonar frames            |
 | `frame_id`           | str     | `echo`             |  TF frame ID                             |
 
 **Run Example**:
 ```bash
-ros2 run sonoptix_sonar echo
+ros2 run sonoptix_ros2 echo
 ```
 
 ---
@@ -113,15 +115,17 @@ ros2 run sonoptix_sonar echo
 
 **Description**: Converts Echo sonar data into a polar image and publishes it.
 
-**Subscribed Topics**: `/sonar/echo/data`
+**Subscribed Topics**: `/sensor/sonar/sonoptix/compressed` or `/sensor/sonar/sonoptix/data`
 
-**Published Topics**: `/sonar/echo/image` (`sensor_msgs/Image`)
+**Published Topics**: 
+- `/sonar/echo/image` (`sensor_msgs/Image`, Processed polar image)
+- `/sensor/sonar/sonoptix/param/contrast` (`std_msgs/Float32`, Current contrast parameter)
 
 **Parameters**: The parameters can be updated while running the node.
 
 | Name           | Type   | Default              | Description                               |
 |----------------|--------|----------------------|-------------------------------------------|
-| `data_topic`   | str    | `/sonar/echo/compressed`    | Input topic for sonar data (raw or compressed) |
+| `data_topic`   | str    | `/sensor/sonar/sonoptix/compressed`    | Input topic for sonar data (raw or compressed) |
 | `image_topic`  | str    | `/sonar/echo/image`   | Output topic for visualized image         |
 | `contrast`     | float  | `10.0`               | Contrast multiplier for visualization     |
 | `bag_file`     | str    |                      | Optional path to an input ros2 bag file with sonar data |
@@ -129,7 +133,7 @@ ros2 run sonoptix_sonar echo
 
 **Run Example**:
 ```bash
-ros2 run sonoptix_sonar echo_imager --ros-args -p contrast:=10 -p data_topic:=/sonar/echo/data
+ros2 run sonoptix_ros2 echo_imager --ros-args -p contrast:=10 -p data_topic:=/sensor/sonar/sonoptix/data
 ```
 
 Note that when reading from a bag file, the node will export the output to `echo_sonar.mp4` video file by default. 
