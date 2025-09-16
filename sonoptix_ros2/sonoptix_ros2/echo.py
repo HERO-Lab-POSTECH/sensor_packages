@@ -140,27 +140,35 @@ class EchoNode(Node):
             self.set_param_callback)
 
         self.rtsp_url = f'rtsp://{self.ip}:8554/raw'
-        self.api_url = f'http://{self.ip}:8000/api/v1'
+        self.api_url = f'http://{self.ip}:8000/api/v2'
 
         self.get_logger().info(f'Configuring Sonar')
 
-        # Set the sonar range, tx_mode, and enable the transponder with retry logic
+        # Set the sonar range, tx_mode, and enable the transceiver with retry logic
         max_retries = 60  # 60초 동안 재시도
         retry_delay = 1.0  # 1초마다 재시도
         
         for attempt in range(max_retries):
             try:
-                response = requests.patch(self.api_url + '/transponder',
-                             json={
-                                   "enable": self.power_state,
-                                   "sonar_range": float(self.range),
-                                   "trigger_mode": self.trigger_mode,
-                                   "operation_mode": self.operation_mode
-                               },
+                # API v2 uses transceiver endpoint with different format
+                power_state_str = 'on' if self.power_state else 'off'
+                transceiver_data = {
+                    "power_state": power_state_str,
+                    "range": int(self.range),
+                    "tx_mode": self.tx_mode
+                }
+                
+                # TODO: API v2 파라미터 지원 확인 필요
+                # v2 API에서 아래 파라미터들이 지원되면 transceiver_data에 추가
+                # "trigger_mode": self.trigger_mode,
+                # "operation_mode": self.operation_mode
+                
+                response = requests.put(self.api_url + '/transceiver',
+                             json=transceiver_data,
                              timeout=2.0)
                 
                 if response.status_code == 200:
-                    self.get_logger().info('Successfully configured sonar transponder')
+                    self.get_logger().info('Successfully configured sonar transceiver')
                     break
                 else:
                     self.get_logger().warn(f'API returned status {response.status_code}, retrying...')
@@ -191,35 +199,53 @@ class EchoNode(Node):
                     self.get_logger().error(f'Please check the IP address: {self.ip}')
                     raise
 
-        # Configure additional sonar parameters (config and colormap)
+        # Set the data stream type to RTSP (API v2 requirement)
         try:
-            # Set gain and contrast
-            self.get_logger().info(f'Initial config: gain={self.gain}, contrast={self.contrast}')
-            config_response = requests.patch(self.api_url + '/config',
-                                           json={
-                                               "gain": float(self.gain),
-                                               "contrast": float(self.contrast)
-                                           },
-                                           timeout=2.0)
-            if config_response.status_code == 200:
-                result = config_response.json()
-                self.get_logger().info(f'Config set successfully. Server returned: {result}')
+            stream_response = requests.put(self.api_url + '/datastream',
+                                         json={"stream_type": 'rtsp'},
+                                         timeout=2.0)
+            if stream_response.status_code == 200:
+                self.get_logger().info('Data stream set to RTSP mode')
             else:
-                self.get_logger().error(f'Config update failed: {config_response.status_code} - {config_response.text}')
-            
-            # Set colormap
-            self.get_logger().info(f'Setting colormap index to {self.colormap_index}')
-            colormap_response = requests.put(self.api_url + '/colormap/index',
-                                           json={"value": self.colormap_index},
-                                           timeout=2.0)
-            if colormap_response.status_code == 200:
-                colormap_names = ['gray', 'amber', 'ironbow', 'deep', 'rainbow']
-                result = colormap_response.json()
-                self.get_logger().info(f'Set colormap to {colormap_names[self.colormap_index]}. Server returned: {result}')
-            else:
-                self.get_logger().error(f'Colormap update failed: {colormap_response.status_code} - {colormap_response.text}')
+                self.get_logger().warn(f'Failed to set data stream: {stream_response.status_code}')
         except Exception as e:
-            self.get_logger().warn(f'Failed to set config parameters: {e}')
+            self.get_logger().warn(f'Failed to set data stream: {e}')
+
+        # TODO: API v2 config/colormap 파라미터 지원 확인 필요
+        # v2 API에서 gain, contrast, colormap이 지원되면 아래 주석을 해제하고
+        # 적절한 엔드포인트로 수정하여 사용
+        
+        # try:
+        #     # Set gain and contrast
+        #     self.get_logger().info(f'Initial config: gain={self.gain}, contrast={self.contrast}')
+        #     config_response = requests.patch(self.api_url + '/config',  # v2 엔드포인트 확인 필요
+        #                                    json={
+        #                                        "gain": float(self.gain),
+        #                                        "contrast": float(self.contrast)
+        #                                    },
+        #                                    timeout=2.0)
+        #     if config_response.status_code == 200:
+        #         result = config_response.json()
+        #         self.get_logger().info(f'Config set successfully. Server returned: {result}')
+        #     else:
+        #         self.get_logger().error(f'Config update failed: {config_response.status_code} - {config_response.text}')
+        #     
+        #     # Set colormap
+        #     self.get_logger().info(f'Setting colormap index to {self.colormap_index}')
+        #     colormap_response = requests.put(self.api_url + '/colormap/index',  # v2 엔드포인트 확인 필요
+        #                                    json={"value": self.colormap_index},
+        #                                    timeout=2.0)
+        #     if colormap_response.status_code == 200:
+        #         colormap_names = ['gray', 'amber', 'ironbow', 'deep', 'rainbow']
+        #         result = colormap_response.json()
+        #         self.get_logger().info(f'Set colormap to {colormap_names[self.colormap_index]}. Server returned: {result}')
+        #     else:
+        #         self.get_logger().error(f'Colormap update failed: {colormap_response.status_code} - {colormap_response.text}')
+        # except Exception as e:
+        #     self.get_logger().warn(f'Failed to set config parameters: {e}')
+        
+        # 현재는 config 파라미터 설정을 건너뜀 (API v2에서 지원 확인 필요)
+        self.get_logger().info('Skipping config/colormap settings (TODO: check API v2 support)')
         
         # Note: RTSP stream is automatically available when transponder is enabled
 
@@ -349,8 +375,8 @@ class EchoNode(Node):
                 # Allow for params callback to be processed
                 rclpy.spin_once(self, timeout_sec=0.01)
         finally:
-            # Stop the transponder before destroying the node
-            requests.patch(self.api_url + '/transponder', json={"enable": False})
+            # Stop the transceiver before destroying the node
+            requests.put(self.api_url + '/transceiver', json={"power_state": 'off'})
             self.get_logger().info(f'Transceiver disabled')
             self.destroy_node()
             rclpy.shutdown()
@@ -406,60 +432,79 @@ class EchoNode(Node):
                 self.get_logger().info(f'Updated {param.name}: {param.value}')
 
             # Configure sonar if necessary
-            if param.name in ['range', 'power_state', 'operation_mode', 'trigger_mode']:
-                requests.patch(self.api_url + '/transponder',
-                             json={
-                                "enable": self.power_state,
-                                "sonar_range": float(self.range),
-                                "trigger_mode": self.trigger_mode,
-                                "operation_mode": self.operation_mode
-                             })
-                # Range 또는 operation_mode 변경 시 RTSP 스트림 재연결
-                if param.name in ['range', 'operation_mode']:
-                    self.get_logger().info(f'Reconnecting RTSP stream for new settings')
+            if param.name in ['range', 'power_state', 'tx_mode']:
+                power_state_str = 'on' if self.power_state else 'off'
+                transceiver_data = {
+                    "power_state": power_state_str,
+                    "range": int(self.range),
+                    "tx_mode": self.tx_mode
+                }
+                
+                # TODO: API v2 파라미터 지원 확인 필요
+                # v2 API에서 operation_mode, trigger_mode가 지원되면
+                # 위의 if 조건에 'operation_mode', 'trigger_mode'를 추가하고
+                # transceiver_data에 해당 필드 추가
+                
+                requests.put(self.api_url + '/transceiver',
+                             json=transceiver_data)
+                
+                # Range 변경 시 RTSP 스트림 재연결
+                if param.name == 'range':
+                    self.get_logger().info(f'Reconnecting RTSP stream for new range setting')
                     self.connect_rtsp()
+            
+            # TODO: operation_mode, trigger_mode 파라미터 처리
+            # v2 API에서 지원하면 위의 transceiver 업데이트에 포함
+            if param.name in ['operation_mode', 'trigger_mode']:
+                self.get_logger().info(f'Parameter {param.name} updated but not sent to API v2 (TODO: check support)')
+            
+            # TODO: API v2 config/colormap 파라미터 지원 확인 필요
+            # v2 API에서 gain, contrast, colormap이 지원되면 아래 주석을 해제하고
+            # 적절한 엔드포인트로 수정하여 사용
             
             # Configure image parameters
             if param.name in ['gain', 'contrast']:
-                try:
-                    # API 호출 전 현재 값 로깅
-                    self.get_logger().info(f'Sending config update: gain={self.gain}, contrast={self.contrast}')
-                    
-                    response = requests.patch(self.api_url + '/config',
-                                 json={
-                                    "gain": float(self.gain),
-                                    "contrast": float(self.contrast)
-                                 },
-                                 timeout=2.0)
-                    
-                    if response.status_code == 200:
-                        # 응답 확인
-                        result_data = response.json()
-                        self.get_logger().info(f'Config update successful. Server returned: {result_data}')
-                    else:
-                        self.get_logger().error(f'Config update failed with status {response.status_code}: {response.text}')
-                        
-                except Exception as e:
-                    self.get_logger().error(f'Failed to update config: {e}')
+                self.get_logger().info(f'Parameter {param.name} updated to {param.value} but not sent to API v2 (TODO: check support)')
+                # try:
+                #     # API 호출 전 현재 값 로깅
+                #     self.get_logger().info(f'Sending config update: gain={self.gain}, contrast={self.contrast}')
+                #     
+                #     response = requests.patch(self.api_url + '/config',  # v2 엔드포인트 확인 필요
+                #                  json={
+                #                     "gain": float(self.gain),
+                #                     "contrast": float(self.contrast)
+                #                  },
+                #                  timeout=2.0)
+                #     
+                #     if response.status_code == 200:
+                #         # 응답 확인
+                #         result_data = response.json()
+                #         self.get_logger().info(f'Config update successful. Server returned: {result_data}')
+                #     else:
+                #         self.get_logger().error(f'Config update failed with status {response.status_code}: {response.text}')
+                #         
+                # except Exception as e:
+                #     self.get_logger().error(f'Failed to update config: {e}')
             
             # Configure colormap
             if param.name == 'colormap_index':
-                try:
-                    self.get_logger().info(f'Sending colormap index: {self.colormap_index}')
-                    
-                    response = requests.put(self.api_url + '/colormap/index',
-                               json={"value": self.colormap_index},
-                               timeout=2.0)
-                    
-                    if response.status_code == 200:
-                        colormap_names = ['gray', 'amber', 'ironbow', 'deep', 'rainbow']
-                        result_data = response.json()
-                        self.get_logger().info(f'Set colormap to {colormap_names[self.colormap_index]}. Server returned: {result_data}')
-                    else:
-                        self.get_logger().error(f'Colormap update failed with status {response.status_code}: {response.text}')
-                        
-                except Exception as e:
-                    self.get_logger().error(f'Failed to update colormap: {e}')
+                self.get_logger().info(f'Parameter colormap_index updated to {param.value} but not sent to API v2 (TODO: check support)')
+                # try:
+                #     self.get_logger().info(f'Sending colormap index: {self.colormap_index}')
+                #     
+                #     response = requests.put(self.api_url + '/colormap/index',  # v2 엔드포인트 확인 필요
+                #                json={"value": self.colormap_index},
+                #                timeout=2.0)
+                #     
+                #     if response.status_code == 200:
+                #         colormap_names = ['gray', 'amber', 'ironbow', 'deep', 'rainbow']
+                #         result_data = response.json()
+                #         self.get_logger().info(f'Set colormap to {colormap_names[self.colormap_index]}. Server returned: {result_data}')
+                #     else:
+                #         self.get_logger().error(f'Colormap update failed with status {response.status_code}: {response.text}')
+                #         
+                # except Exception as e:
+                #     self.get_logger().error(f'Failed to update colormap: {e}')
         return result
 
 
