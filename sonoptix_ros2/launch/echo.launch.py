@@ -26,106 +26,26 @@
 
 from launch_ros.actions import Node
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
-from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
 
 def generate_launch_description():
-    # Declare launch arguments
-    declare_ip = DeclareLaunchArgument(
-        'ip',
-        default_value='192.168.0.203',
-        description='IP address of the Sonoptix sonar'
-    )
-    
-    declare_range = DeclareLaunchArgument(
-        'range',
-        default_value='10',
-        description='Sonar range in meters (minimum 3m)'
-    )
-    
-    declare_operation_mode = DeclareLaunchArgument(
-        'operation_mode',
-        default_value='0',
-        description='Operation mode (0-3, likely frequency selection)'
-    )
-    
-    declare_tx_mode = DeclareLaunchArgument(
-        'tx_mode',
-        default_value='auto',
-        description='Transmission mode (auto/manual)'
-    )
-    
-    declare_power_state = DeclareLaunchArgument(
-        'power_state',
-        default_value='True',
-        description='Initial power state of the sonar'
-    )
-    
-    declare_data_topic = DeclareLaunchArgument(
-        'data_topic',
-        default_value='/sensor/sonar/sonoptix/data',
-        description='Topic name for raw sonar data'
-    )
-    
-    declare_compressed_topic = DeclareLaunchArgument(
-        'compressed_topic',
-        default_value='/sensor/sonar/sonoptix/compressed',
-        description='Topic name for compressed sonar data'
-    )
-    
-    declare_frame_id = DeclareLaunchArgument(
-        'frame_id',
-        default_value='echo',
-        description='Frame ID for the sonar data'
-    )
-    
-    declare_compression_level = DeclareLaunchArgument(
-        'compression_level',
-        default_value='1',  # 최고 품질 (압축 최소화)
-        description='Compression level [1-9], higher is more compressed but requires more compute'
-    )
-    
-    declare_reliability = DeclareLaunchArgument(
-        'reliability',
-        default_value='best_effort',
-        description='QoS reliability setting (best_effort/reliable)'
-    )
-    
-    # Get launch configurations
-    ip = LaunchConfiguration('ip')
-    sonar_range = LaunchConfiguration('range')
-    operation_mode = LaunchConfiguration('operation_mode')
-    tx_mode = LaunchConfiguration('tx_mode')
-    power_state = LaunchConfiguration('power_state')
-    data_topic = LaunchConfiguration('data_topic')
-    compressed_topic = LaunchConfiguration('compressed_topic')
-    frame_id = LaunchConfiguration('frame_id')
-    compression_level = LaunchConfiguration('compression_level')
-    reliability = LaunchConfiguration('reliability')
-
-    # QoS profile for image data
-    image_qos = QoSProfile(
-        reliability=ReliabilityPolicy.BEST_EFFORT,
-        durability=DurabilityPolicy.VOLATILE,
-        depth=1
-    )
+    # Higher is more compressed but requires more compute [1-9]
+    compression_level = 1
+    sonar_range = 12  # meters
+    data_topic = '/sensor/sonar/sonoptix/data'
+    compressed_topic = '/sensor/sonar/sonoptix/compressed'
+    # QoS Config
+    reliability = 'best_effort'
 
     echo_data = Node(package='sonoptix_ros2',
                      executable='echo',
                      parameters=[{
-                         'ip': ip,
-                         'range': sonar_range,
-                         'operation_mode': operation_mode,
-                         'tx_mode': tx_mode,
-                         'power_state': power_state,
                          'topic': data_topic,
-                         'frame_id': frame_id,
+                         'range': sonar_range,
+                         f'qos_overrides.{data_topic}.publisher.reliability': reliability
                      }],
                      output='screen')
 
-    # High-quality compressed image publisher with proper QoS
     echo_transport = Node(package='image_transport',
                           executable='republish',
                           name='echo_transport',
@@ -133,24 +53,10 @@ def generate_launch_description():
                           remappings=[('in', data_topic),
                                       ('out/compressed', compressed_topic)],
                           parameters=[{
-                              'out.compressed.format': 'png',  # PNG는 무손실 압축
+                              'out.compressed.format': 'png',
                               'out.compressed.png_level': compression_level,
-                              'qos_overrides.in.subscription.reliability': 'best_effort',
-                              'qos_overrides.out.compressed.publisher.reliability': 'best_effort',
+                              f'qos_overrides.{compressed_topic}.publisher.reliability': reliability
                           }],
                           output='screen')
 
-    return LaunchDescription([
-        declare_ip,
-        declare_range,
-        declare_operation_mode,
-        declare_tx_mode,
-        declare_power_state,
-        declare_data_topic,
-        declare_compressed_topic,
-        declare_frame_id,
-        declare_compression_level,
-        declare_reliability,
-        echo_data,
-        # echo_transport  # QoS 충돌로 인해 일시적으로 비활성화
-    ])
+    return LaunchDescription([echo_data, echo_transport])

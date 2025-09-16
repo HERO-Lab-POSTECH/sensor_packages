@@ -26,45 +26,22 @@
 
 from launch_ros.actions import Node
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
-    # Declare launch arguments
-    declare_data_topic = DeclareLaunchArgument(
-        'data_topic',
-        default_value='/sensor/sonar/sonoptix/data',
-        description='Topic name for decompressed sonar data output'
-    )
-    
-    declare_compressed_topic = DeclareLaunchArgument(
-        'compressed_topic',
-        default_value='/sensor/sonar/sonoptix/compressed',
-        description='Topic name for compressed sonar data input'
-    )
-    
-    declare_reliability = DeclareLaunchArgument(
-        'reliability',
-        default_value='best_effort',
-        description='QoS reliability setting (best_effort/reliable)'
-    )
-    
-    # Get launch configurations
-    data_topic = LaunchConfiguration('data_topic')
-    compressed_topic = LaunchConfiguration('compressed_topic')
-    reliability = LaunchConfiguration('reliability')
+    data_topic = '/sensor/sonar/sonoptix/data'
+    compressed_topic = '/sensor/sonar/sonoptix/compressed'
+    # QoS Config
+    reliability = 'best_effort'
 
     echo_decompress = Node(package='image_transport',
                            executable='republish',
                            arguments=['compressed', 'raw'],
                            remappings=[('in/compressed', compressed_topic),
                                        ('out', data_topic)],
+                          parameters=[{
+                              'qos_overrides./parameter_events.publisher.reliability': reliability
+                          }],
                            output='screen')
 
-    return LaunchDescription([
-        declare_data_topic,
-        declare_compressed_topic,
-        declare_reliability,
-        echo_decompress
-    ])
+    return LaunchDescription([echo_decompress])
