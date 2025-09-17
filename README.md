@@ -121,6 +121,17 @@ sudo apt install ros-humble-tf2-sensor-msgs
 ```
 
 ### 빌드 방법 (Building)
+
+#### 필수 패키지 설치
+```bash
+# ROS2 빌드 도구 및 의존성
+sudo apt update
+sudo apt install -y ros-humble-ament-cmake-auto
+sudo apt install -y ros-humble-rosidl-typesupport-c ros-humble-rosidl-typesupport-cpp
+sudo apt install -y ros-humble-rosidl-default-generators
+```
+
+#### 빌드 단계
 ```bash
 # Clone repository
 git clone -b humble-devel https://github.com/HERO-Lab-POSTECH/sensor_packages.git
@@ -130,13 +141,34 @@ cd sensor_packages
 mkdir -p ~/ros2_ws/src
 cp -r * ~/ros2_ws/src/
 
+# Livox driver package.xml 설정 (필요한 경우)
+cp ~/ros2_ws/src/sensor_packages/livox_ros2/livox_driver/package_ROS2.xml \
+   ~/ros2_ws/src/sensor_packages/livox_ros2/livox_driver/package.xml
+
 # Install dependencies
 cd ~/ros2_ws
 rosdep install --from-paths src --ignore-src -y
 
+# Source ROS2 환경
+source /opt/ros/humble/setup.bash
+
 # Build
 colcon build --symlink-install
+
+# Source the workspace
 source install/setup.bash
+```
+
+#### 빌드 문제 해결
+빌드 캐시 문제가 있을 경우:
+```bash
+# 빌드 캐시 정리
+cd ~/ros2_ws
+rm -rf build install log
+
+# 재빌드
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install
 ```
 
 ## Usage Examples
