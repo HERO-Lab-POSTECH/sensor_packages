@@ -133,7 +133,7 @@ ros2 run sonoptix_ros2 echo
 
 **Run Example**:
 ```bash
-ros2 run sonoptix_ros2 echo_imager --ros-args -p contrast:=10 -p data_topic:=/sensor/sonar/sonoptix/data
+ros2 run sonoptix_ros2 echo_imager --ros-args -p contrast:=10.0 -p data_topic:=/sensor/sonar/sonoptix/data
 ```
 
 Note that when reading from a bag file, the node will export the output to `echo_sonar.mp4` video file by default. 

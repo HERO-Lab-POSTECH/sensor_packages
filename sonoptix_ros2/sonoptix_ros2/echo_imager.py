@@ -183,7 +183,7 @@ class EchoImager(Node):
             self.video_writer.write(scan_image)
         else:
             # If not saving to video, publish the frame as a ROS 2 message
-            self.publisher.publish(self.br.cv2_to_imgmsg(scan_image))
+            self.publisher.publish(self.br.cv2_to_imgmsg(scan_image, encoding='rgb8'))
             
             # Publish contrast parameter
             contrast_msg = Float32()

@@ -31,7 +31,7 @@ from launch import LaunchDescription
 def generate_launch_description():
     # Higher is more compressed but requires more compute [1-9]
     compression_level = 1
-    sonar_range = 12  # meters
+    sonar_range = 3  # meters
     data_topic = '/sensor/sonar/sonoptix/data'
     compressed_topic = '/sensor/sonar/sonoptix/compressed'
     image_topic = '/sensor/sonar/sonoptix/image'
@@ -56,19 +56,21 @@ def generate_launch_description():
                           parameters=[{
                               'out.compressed.format': 'png',
                               'out.compressed.png_level': compression_level,
+                              f'qos_overrides.in.subscription.reliability': reliability,
                               f'qos_overrides.{compressed_topic}.publisher.reliability': reliability
                           }],
                           output='screen')
     
-    echo_imager = Node(package='sonoptix_ros2',
-                       executable='echo_imager',
-                       parameters=[{
-                           'data_topic': data_topic,
-                           'image_topic': image_topic,
-                           'contrast': 10.0,
-                           f'qos_overrides.{data_topic}.subscription.reliability': reliability,
-                           f'qos_overrides.{image_topic}.publisher.reliability': reliability
-                       }],
-                       output='screen')
+    # echo_imager = Node(package='sonoptix_ros2',
+    #                    executable='echo_imager',
+    #                    parameters=[{
+    #                        'data_topic': compressed_topic,
+    #                        'image_topic': image_topic,
+    #                        'contrast': 10.0,
+    #                        f'qos_overrides.{compressed_topic}.subscription.reliability': reliability,
+    #                        f'qos_overrides.{image_topic}.publisher.reliability': reliability
+    #                    }],
+    #                    output='screen')
 
-    return LaunchDescription([echo_data, echo_transport, echo_imager])
+    # return LaunchDescription([echo_data, echo_transport, echo_imager])
+    return LaunchDescription([echo_data, echo_transport])

@@ -124,7 +124,13 @@ class EchoNode(Node):
                 if not self.power_state:
                     rclpy.spin_once(self, timeout_sec=1.0)
                     continue
-                _, frame = self.cap.read()
+                    
+                ret, frame = self.cap.read()
+                if not ret or frame is None:
+                    self.get_logger().warn('Failed to read frame from RTSP stream, retrying...')
+                    rclpy.spin_once(self, timeout_sec=0.1)
+                    continue
+                    
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 frame[0, 0] = self.range
                 frame = self.br.cv2_to_imgmsg(frame, encoding='mono8')
