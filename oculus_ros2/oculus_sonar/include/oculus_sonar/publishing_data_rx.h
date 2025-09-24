@@ -59,7 +59,6 @@ class PublishingDataRx : public liboculus::DataRx {
 private:
   rclcpp::Publisher<apl_msgs::msg::RawData>::SharedPtr raw_data_pub_;
   rclcpp::Clock::SharedPtr clock_;
-  unsigned int count_;
 };
 
 } // namespace oculus_sonar

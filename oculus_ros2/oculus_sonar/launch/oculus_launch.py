@@ -39,7 +39,7 @@ def generate_launch_description():
         description='Frequency mode'
     )
     declare_ip_address = DeclareLaunchArgument(
-        'ip_address', default_value='auto',
+        'ip_address', default_value='192.168.0.200',
         description='IP address of sonar'
     )
     declare_send_gain = DeclareLaunchArgument(

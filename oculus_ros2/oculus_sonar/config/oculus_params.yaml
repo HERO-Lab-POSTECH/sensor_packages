@@ -7,7 +7,7 @@ oculus:
   oculus_sonar:
     ros__parameters:
       # Connection settings
-      ip_address: "auto"           # Sonar IP address ("auto" for auto-detect)
+      ip_address: "192.168.0.200"           # Sonar IP address ("auto" for auto-detect)
       frame_id: "oculus"           # Frame ID for published messages
       # Sonar configuration
       range: 2.0                    # Range (meters), valid: 0-40
