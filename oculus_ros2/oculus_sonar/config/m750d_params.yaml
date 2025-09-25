@@ -27,8 +27,5 @@ oculus:
       send_simple_return: true
       gain_assistance: false
 
-      # Fan image settings (polar to Cartesian conversion)
-      publish_fan_image: true        # Enable/disable fan image publishing
-                                       # Resolution auto-calculated based on freq_mode:
-                                       # 750kHz: 250 pixels/m (4mm resolution)
-                                       # 1.2MHz: 400 pixels/m (2.5mm resolution)
+      # Fan image settings removed - use separate fan_imager node instead
+      # To enable fan image, launch with m750d_with_fan.launch.py

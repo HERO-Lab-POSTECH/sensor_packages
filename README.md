@@ -74,6 +74,10 @@
 
 ### 로컬 개발 패키지 (Locally Developed Packages)
 - **oculus_sonar**: Blueprint Subsea Oculus 이미징 소나용 커스텀 ROS2 드라이버
+  - M750d 및 M1200d 모델 지원
+  - 별도 fan image 노드로 11Hz 실시간 성능 달성
+  - marine_acoustic_msgs::SonarImage 표준 메시지 지원
+- **marine_acoustic_msgs**: 해양 음향 센서 표준 메시지 정의
 - **oculus_sonar_msgs**: Oculus 소나 메시지 정의
 - **ping360_sonar_msgs**: Ping360 스캐닝 소나 메시지 정의
 - **sonoptix_ros2**: Sonoptix Echo 이미징 소나 ROS2 드라이버 (MIT License)
@@ -94,6 +98,7 @@ sensor_packages/
 │   ├── g3log/            # Logging library
 │   ├── liboculus/        # Oculus communication library
 │   ├── marine_msgs/      # Marine sensor messages
+│   ├── marine_acoustic_msgs/ # Marine acoustic standard messages (local)
 │   ├── oculus_sonar/     # Main Oculus driver (local)
 │   └── oculus_sonar_msgs/# Oculus messages (local)
 ├── ping1d_ros2/          # Ping1D altimeter driver
@@ -143,8 +148,20 @@ source install/setup.bash
 
 ### 소나 시스템 (Sonar Systems)
 ```bash
-# Oculus imaging sonar
-ros2 launch oculus_sonar oculus_launch.py
+# Oculus M750d imaging sonar (기본 모드 - 11Hz)
+ros2 launch oculus_sonar m750d.launch.py
+
+# Oculus M750d with fan image (별도 노드로 fan image 처리)
+ros2 launch oculus_sonar m750d_with_fan.launch.py
+
+# Oculus M1200d imaging sonar
+ros2 launch oculus_sonar m1200d.launch.py
+
+# Oculus M1200d with fan image
+ros2 launch oculus_sonar m1200d_with_fan.launch.py
+
+# Oculus 파라미터 오버라이드 예시
+ros2 launch oculus_sonar m750d.launch.py range:=10.0 gain:=80 ping_rate:=2
 
 # Ping360 scanning sonar
 ros2 launch ping360_sonar ping360.launch.py device:=/dev/ttyUSB0
@@ -185,8 +202,19 @@ ros2 launch livox_driver msg_MID360_launch.py
 
 ### Sonar Topics
 - **Oculus M750d**:
-  - Raw: `/sensor/sonar/oculus_m750d/raw`
-  - Image: `/sensor/sonar/oculus_m750d/image`
+  - Raw: `/sensor/sonar/oculus/m750d/raw`
+  - Image: `/sensor/sonar/oculus/m750d/image`
+  - SonarImage: `/sensor/sonar/oculus/m750d/sonar`
+  - Metadata: `/sensor/sonar/oculus/m750d/metadata`
+  - Raw Data: `/sensor/sonar/oculus/m750d/raw_data`
+  - Fan Image: `/sensor/sonar/oculus/m750d/fan_image` (별도 노드 실행 시)
+- **Oculus M1200d**:
+  - Raw: `/sensor/sonar/oculus/m1200d/raw`
+  - Image: `/sensor/sonar/oculus/m1200d/image`
+  - SonarImage: `/sensor/sonar/oculus/m1200d/sonar`
+  - Metadata: `/sensor/sonar/oculus/m1200d/metadata`
+  - Raw Data: `/sensor/sonar/oculus/m1200d/raw_data`
+  - Fan Image: `/sensor/sonar/oculus/m1200d/fan_image` (별도 노드 실행 시)
 - **Ping360**:
   - Echo: `/sensor/sonar/ping360/echo`
   - Scan: `/sensor/sonar/ping360/scan`
@@ -224,6 +252,26 @@ sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
 
 ### Launch 파라미터 (Launch Parameters)
+
+#### Oculus M750d/M1200d
+- `ip_address`: 소나 IP 주소 (기본값: 'auto' 자동탐색, 예: '192.168.0.200')
+- `range`: 소나 범위 [m] (M750d: 0.1-120m, M1200d: 0.1-40m, 기본값: 2.0)
+- `gain`: 게인 [%] (1-100, 기본값: 100)
+- `gamma`: 감마 보정 (0-255, 기본값: 200)
+- `ping_rate`: 핑 속도 (0=Normal, 1=High, 2=Highest, 3=Low, 4=Lowest, 5=Standby, 기본값: 3)
+- `freq_mode`: 주파수 모드 (1=저주파, 2=고주파, 기본값: 2)
+  - M750d: 1=750kHz, 2=1.2MHz
+  - M1200d: 1=1.2MHz, 2=2.1MHz
+- `data_size`: 데이터 크기 ('8bit', '16bit', '32bit', 기본값: '8bit')
+- `num_beams`: 빔 개수 (0=256빔, 1=512빔, 기본값: 1)
+
+#### Oculus Fan Imager (별도 노드)
+Fan image 처리를 위한 별도 노드 파라미터:
+- `input_topic`: 입력 SonarImage 토픽 (기본값: '/sensor/sonar/oculus/m750d/sonar')
+- `output_topic`: 출력 fan image 토픽 (기본값: '/sensor/sonar/oculus/m750d/fan_image')
+- `sonar_model`: 소나 모델 ('m750d' 또는 'm1200d', 기본값: 'm750d')
+- `freq_mode`: 주파수 모드 (1=저주파, 2=고주파, 기본값: 2)
+- `apply_colormap`: 컬러맵 적용 여부 (기본값: true)
 
 #### Ping360
 - `device`: 시리얼 디바이스 경로 (기본값: `/dev/ping360`)

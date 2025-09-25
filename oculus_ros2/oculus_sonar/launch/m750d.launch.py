@@ -59,9 +59,7 @@ def launch_setup(context, *args, **kwargs):
     if num_beams:
         param_overrides['num_beams'] = int(num_beams)
 
-    publish_fan_image = LaunchConfiguration('publish_fan_image').perform(context)
-    if publish_fan_image:
-        param_overrides['publish_fan_image'] = publish_fan_image.lower() == 'true'
+    # publish_fan_image parameter removed - use m750d_with_fan.launch.py instead
 
     # Component container
     container = ComposableNodeContainer(
@@ -125,10 +123,7 @@ def generate_launch_description():
         'num_beams', default_value='',
         description='Number of beams: 0=256, 1=512 (empty to use config value)'
     )
-    declare_publish_fan_image = DeclareLaunchArgument(
-        'publish_fan_image', default_value='',
-        description='Enable fan image publishing: true/false (empty to use config value)'
-    )
+    # publish_fan_image removed - use m750d_with_fan.launch.py for fan image
 
     return LaunchDescription([
         # Declare arguments
@@ -140,7 +135,6 @@ def generate_launch_description():
         declare_freq_mode,
         declare_data_size,
         declare_num_beams,
-        declare_publish_fan_image,
         # Use OpaqueFunction to handle conditional parameters
         OpaqueFunction(function=launch_setup)
     ])

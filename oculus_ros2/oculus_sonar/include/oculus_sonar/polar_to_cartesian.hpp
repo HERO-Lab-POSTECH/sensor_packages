@@ -80,7 +80,8 @@ public:
           freq_mode_(freq_mode),
           initialized_(false),
           rows_(0),
-          cols_(0) {
+          cols_(0),
+          REVERSE_Z_(1.0f) {  // Python 원본과 동일하게 1로 설정
 
         // Set specifications based on model and frequency
         bool high_freq = (freq_mode == 2);
@@ -117,6 +118,83 @@ public:
             pixels_per_meter_ = getOptimalPixelsPerMeter(sonar_model_, freq_mode);
             initialized_ = false;  // Force regeneration of mapping
         }
+    }
+
+    /**
+     * @brief Generate mapping from SonarImage message
+     * @param num_ranges Number of range samples
+     * @param num_beams Number of beams
+     * @param max_range Maximum range in meters
+     * @param azimuth_angles Actual azimuth angles from sonar
+     */
+    void generateMappingFromSonarImage(int num_ranges, int num_beams, float max_range,
+                                       const std::vector<float>& azimuth_angles) {
+        // Check if we need to regenerate the mapping
+        if (initialized_ &&
+            num_beams == num_beams_ &&
+            num_ranges == num_ranges_ &&
+            std::abs(max_range - max_range_) < 1e-6) {
+            return;
+        }
+
+        num_beams_ = num_beams;
+        num_ranges_ = num_ranges;
+        max_range_ = max_range;
+        range_resolution_ = max_range / num_ranges;
+
+        // Use actual bearings from the sonar message
+        bearings_.clear();
+        bearings_.reserve(azimuth_angles.size());
+        for (float angle : azimuth_angles) {
+            bearings_.push_back(angle);  // Already in radians
+        }
+
+        // Generate the mapping
+        generateCartesianMapping();
+
+        RCLCPP_INFO(rclcpp::get_logger("polar_converter"),
+                   "Generated mapping from SonarImage: %dx%d polar -> %dx%d Cartesian (%.1f° FOV, %.1fm range)",
+                   num_beams, num_ranges, cols_, rows_,
+                   (bearings_.back() - bearings_.front()) * 180.0f / M_PI, max_range);
+    }
+
+    /**
+     * @brief Generate mapping from image dimensions (for fan imager node)
+     * @param num_ranges Number of range samples
+     * @param num_beams Number of beams
+     * @param max_range Maximum range in meters
+     */
+    void generateMappingFromDimensions(int num_ranges, int num_beams, float max_range) {
+        // Check if we need to regenerate the mapping
+        if (initialized_ &&
+            num_beams == num_beams_ &&
+            num_ranges == num_ranges_ &&
+            std::abs(max_range - max_range_) < 1e-6) {
+            return;
+        }
+
+        num_beams_ = num_beams;
+        num_ranges_ = num_ranges;
+        max_range_ = max_range;
+        range_resolution_ = max_range / num_ranges;
+
+        // Generate bearing angles based on sonar specifications
+        bearings_.clear();
+        float fov_rad = specs_.horizontal_aperture_deg * M_PI / 180.0f;
+        float beam_spacing_rad = fov_rad / (num_beams - 1);
+        float start_bearing = -fov_rad / 2.0f;
+
+        for (int i = 0; i < num_beams; ++i) {
+            bearings_.push_back(start_bearing + i * beam_spacing_rad);
+        }
+
+        // Calculate output image dimensions and generate mapping
+        generateCartesianMapping();
+
+        RCLCPP_INFO(rclcpp::get_logger("polar_converter"),
+                   "Generated mapping: %dx%d polar -> %dx%d Cartesian (%.1f° FOV, %.1fm range)",
+                   num_beams, num_ranges, cols_, rows_,
+                   specs_.horizontal_aperture_deg, max_range);
     }
 
     /**
@@ -198,14 +276,13 @@ public:
         // Height is simply the max range
         float height = max_range;
 
-        // Convert to pixels based on range resolution
-        // Range resolution is approximately 2.5mm for 1.2MHz
-        rows_ = static_cast<int>(std::ceil(height / range_resolution));  // height in pixels
-        cols_ = static_cast<int>(std::ceil(arc_width / range_resolution));  // width in pixels
+        // Convert to pixels based on pixels_per_meter setting
+        rows_ = static_cast<int>(std::ceil(height * pixels_per_meter_));  // height in pixels
+        cols_ = static_cast<int>(std::ceil(arc_width * pixels_per_meter_));  // width in pixels
 
         RCLCPP_INFO(rclcpp::get_logger("polar_converter"),
                    "Fan image: %.1fm range, %.1f° FOV -> %d x %d pixels (%.1fmm resolution)",
-                   max_range, bearing_span * 180.0f / M_PI, rows_, cols_, range_resolution * 1000.0f);
+                   max_range, bearing_span * 180.0f / M_PI, rows_, cols_, (1.0f / pixels_per_meter_) * 1000.0f);
 
         // Create bearing interpolation function similar to Python's interp1d
         // This maps bearing angles to beam indices
@@ -214,17 +291,19 @@ public:
         map_x_ = cv::Mat(rows_, cols_, CV_32F);
         map_y_ = cv::Mat(rows_, cols_, CV_32F);
 
+        float pixel_size = 1.0f / pixels_per_meter_;  // meters per pixel
+
         for (int row = 0; row < rows_; ++row) {
             for (int col = 0; col < cols_; ++col) {
                 // Python: x = self.res * (self.rows - YY)
-                float x = range_resolution_ * (rows_ - row);
+                float x = pixel_size * (rows_ - row);
 
                 // Python: y = self.res * (-self.cols / 2.0 + XX + 0.5)
-                float y = range_resolution_ * (-cols_ / 2.0f + col + 0.5f);
+                float y = pixel_size * (-cols_ / 2.0f + col + 0.5f);
 
                 // Python: b = np.arctan2(y, x) * self.REVERSE_Z
-                // Note: REVERSE_Z is typically -1 to flip the bearing
-                float bearing = std::atan2(y, x) * -1.0f;
+                // Note: REVERSE_Z is 1 for proper bearing calculation (matching Python)
+                float bearing = std::atan2(y, x) * REVERSE_Z_;
 
                 // Python: r = np.sqrt(np.square(x) + np.square(y))
                 float range = std::sqrt(x * x + y * y);
@@ -307,11 +386,75 @@ public:
     }
 
 private:
+    /**
+     * @brief Generate the Cartesian mapping matrices
+     */
+    void generateCartesianMapping() {
+        // Calculate output image dimensions for proper resolution
+        float bearing_span = bearings_.back() - bearings_.front();  // in radians
+        float half_angle = bearing_span / 2.0f;
+
+        // Width at maximum range (arc length)
+        float arc_width = 2.0f * max_range_ * std::sin(half_angle);
+
+        // Height is simply the max range
+        float height = max_range_;
+
+        // Convert to pixels based on pixels per meter
+        rows_ = static_cast<int>(std::ceil(height * pixels_per_meter_));
+        cols_ = static_cast<int>(std::ceil(arc_width * pixels_per_meter_));
+
+        // Create meshgrid for mapping
+        map_x_ = cv::Mat(rows_, cols_, CV_32F);
+        map_y_ = cv::Mat(rows_, cols_, CV_32F);
+
+        float pixel_size = 1.0f / pixels_per_meter_;  // meters per pixel
+
+        for (int row = 0; row < rows_; ++row) {
+            for (int col = 0; col < cols_; ++col) {
+                // Convert pixel position to physical coordinates
+                float x = pixel_size * (rows_ - row);
+                float y = pixel_size * (-cols_ / 2.0f + col + 0.5f);
+
+                // Convert to polar coordinates
+                float bearing = std::atan2(y, x) * REVERSE_Z_;  // Python과 동일
+                float range = std::sqrt(x * x + y * y);
+
+                // Convert to indices
+                float range_idx = range / range_resolution_;
+
+                // Find beam index by interpolating bearing
+                float beam_idx = -1.0f;
+                if (!bearings_.empty()) {
+                    // Linear interpolation for bearing to beam index
+                    if (bearing < bearings_.front() || bearing > bearings_.back()) {
+                        beam_idx = -1.0f;  // Out of bounds
+                    } else {
+                        // Find the two bearings that bracket our bearing
+                        for (size_t i = 1; i < bearings_.size(); ++i) {
+                            if (bearing <= bearings_[i]) {
+                                float t = (bearing - bearings_[i-1]) / (bearings_[i] - bearings_[i-1]);
+                                beam_idx = static_cast<float>(i - 1) + t;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                map_x_.at<float>(row, col) = beam_idx;
+                map_y_.at<float>(row, col) = range_idx;
+            }
+        }
+
+        initialized_ = true;
+    }
+
     std::string sonar_model_;
     SonarSpecs specs_;
     int freq_mode_;
     float pixels_per_meter_;
     bool initialized_;
+    float REVERSE_Z_;  // 극좌표 변환 방향 (Python 원본과 동일)
 
     // Output image dimensions
     int rows_;  // height (num_ranges)

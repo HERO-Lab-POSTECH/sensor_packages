@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-# m1200d.launch.py
-# Date: 251125
-# Description: ROS2 launch file for Oculus M1200d sonar with argument support
+# m750d_with_fan.launch.py
+# Date: 251209
+# Description: ROS2 launch file for Oculus M750d sonar with fan image converter
 
 import os
 from ament_index_python.packages import get_package_share_directory
@@ -20,10 +20,10 @@ def launch_setup(context, *args, **kwargs):
     config_file = os.path.join(
         get_package_share_directory('oculus_sonar'),
         'config',
-        'm1200d_params.yaml'
+        'm750d_params.yaml'
     )
 
-    # Build parameter overrides dictionary
+    # Build parameter overrides dictionary for driver
     param_overrides = {}
 
     # Check each parameter and add only if provided (not empty)
@@ -59,24 +59,42 @@ def launch_setup(context, *args, **kwargs):
     if num_beams:
         param_overrides['num_beams'] = int(num_beams)
 
-    # publish_fan_image parameter removed - use m1200d_with_fan.launch.py instead
+    # Fan imager parameters
+    apply_colormap = LaunchConfiguration('apply_colormap').perform(context)
+    colormap_type = LaunchConfiguration('colormap_type').perform(context)
 
-    # Component container
+    # Component container with both nodes
     container = ComposableNodeContainer(
-        name='oculus_m1200d_container',
+        name='oculus_m750d_container',
         namespace='',
         package='rclcpp_components',
         executable='component_container',
         composable_node_descriptions=[
+            # Main driver component
             ComposableNode(
                 package='oculus_sonar',
                 plugin='oculus_sonar::OculusDriver',
-                name='m1200d',
+                name='m750d',
                 namespace='oculus',
                 parameters=[
                     config_file,  # Load config file first
                     param_overrides  # Then apply overrides (if any)
                 ] if param_overrides else [config_file],  # Only config if no overrides
+            ),
+            # Fan image converter component
+            ComposableNode(
+                package='oculus_sonar',
+                plugin='oculus_sonar::OculusFanImager',
+                name='fan_imager',
+                namespace='oculus',
+                parameters=[{
+                    'input_topic': '/sensor/sonar/oculus/m750d/sonar',
+                    'output_topic': '/sensor/sonar/oculus/m750d/fan_image',
+                    'sonar_model': 'm750d',
+                    'freq_mode': int(freq_mode) if freq_mode else 2,
+                    'apply_colormap': apply_colormap.lower() == 'true' if apply_colormap else True,
+                    'colormap_type': int(colormap_type) if colormap_type else 2,  # COLORMAP_JET
+                }],
             ),
         ],
         output='screen',
@@ -87,10 +105,10 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     """
-    Generate the launch description for the Oculus M1200d sonar.
+    Generate the launch description for the Oculus M750d sonar with fan image converter.
     Supports command-line argument overrides for all parameters.
     """
-    # Declare launch arguments (with empty default = use config value)
+    # Declare launch arguments for driver (with empty default = use config value)
     declare_ip_address = DeclareLaunchArgument(
         'ip_address', default_value='',
         description='Sonar IP address (empty to use config value)'
@@ -123,7 +141,16 @@ def generate_launch_description():
         'num_beams', default_value='',
         description='Number of beams: 0=256, 1=512 (empty to use config value)'
     )
-    # publish_fan_image removed - use m1200d_with_fan.launch.py for fan image
+    
+    # Declare launch arguments for fan imager
+    declare_apply_colormap = DeclareLaunchArgument(
+        'apply_colormap', default_value='true',
+        description='Apply colormap to fan image: true/false'
+    )
+    declare_colormap_type = DeclareLaunchArgument(
+        'colormap_type', default_value='2',
+        description='OpenCV colormap type (2=JET, 11=HOT, 12=COOL, etc.)'
+    )
 
     return LaunchDescription([
         # Declare arguments
@@ -135,24 +162,31 @@ def generate_launch_description():
         declare_freq_mode,
         declare_data_size,
         declare_num_beams,
+        declare_apply_colormap,
+        declare_colormap_type,
         # Use OpaqueFunction to handle conditional parameters
         OpaqueFunction(function=launch_setup)
     ])
 
 # Usage examples:
-# 1. Default settings from config file:
-#    ros2 launch oculus_sonar m1200d.launch.py
+# 1. Default settings from config file with fan image:
+#    ros2 launch oculus_sonar m750d_with_fan.launch.py
 #
 # 2. Override specific parameters:
-#    ros2 launch oculus_sonar m1200d.launch.py range:=20.0 gain:=90
-#    ros2 launch oculus_sonar m1200d.launch.py ip_address:=192.168.0.202
+#    ros2 launch oculus_sonar m750d_with_fan.launch.py range:=10.0 gain:=80
+#    ros2 launch oculus_sonar m750d_with_fan.launch.py ip_address:=192.168.0.201
 #
-# 3. Override multiple parameters:
-#    ros2 launch oculus_sonar m1200d.launch.py range:=15.0 ping_rate:=1 freq_mode:=2
+# 3. Customize fan image settings:
+#    ros2 launch oculus_sonar m750d_with_fan.launch.py apply_colormap:=false
+#    ros2 launch oculus_sonar m750d_with_fan.launch.py colormap_type:=11
 #
 # Topics published:
-# - /sensor/sonar/oculus/m1200d/raw
-# - /sensor/sonar/oculus/m1200d/image
-# - /sensor/sonar/oculus/m1200d/metadata
-# - /sensor/sonar/oculus/m1200d/raw_data
-# - /sensor/sonar/oculus/m1200d/param/*
+# Driver:
+# - /sensor/sonar/oculus/m750d/sonar     (SonarImage)
+# - /sensor/sonar/oculus/m750d/image     (Image - polar)
+# - /sensor/sonar/oculus/m750d/metadata  (OculusMetadata)
+# - /sensor/sonar/oculus/m750d/raw_data  (RawData)
+# - /sensor/sonar/oculus/m750d/param/*   (Parameters)
+#
+# Fan Imager:
+# - /sensor/sonar/oculus/m750d/fan_image (Image - Cartesian)

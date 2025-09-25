@@ -29,12 +29,9 @@
 
 #include "oculus_sonar/publishing_data_rx.h"
 #include "oculus_sonar/ping_to_sonar_image.hpp"
-#include "oculus_sonar/polar_to_cartesian.hpp"
-
 #include "marine_acoustic_msgs/msg/sonar_image.hpp"
 #include "oculus_sonar_msgs/msg/oculus_metadata.hpp"
 #include "apl_msgs/msg/raw_data.hpp"
-#include <opencv2/opencv.hpp>
 
 namespace oculus_sonar {
 
@@ -68,11 +65,6 @@ class OculusDriver : public rclcpp::Node {
     imaging_sonar_pub_->publish(sonar_msg);
     auto image_msg = sonarToImage(sonar_msg);
     image_pub_->publish(image_msg);
-
-    // Publish fan image if enabled
-    if (publish_fan_image_ && fan_image_pub_) {
-      publishFanImage(ping, sonar_msg.header);
-    }
 
     oculus_sonar_msgs::msg::OculusMetadata meta;
     meta.header = sonar_msg.header;
@@ -143,7 +135,6 @@ class OculusDriver : public rclcpp::Node {
   rclcpp::Publisher<oculus_sonar_msgs::msg::OculusMetadata>::SharedPtr oculus_meta_pub_;
   rclcpp::Publisher<apl_msgs::msg::RawData>::SharedPtr raw_data_pub_;
   rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_pub_;
-  rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr fan_image_pub_;
   
   // Parameter publishers for recording
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr ping_rate_pub_;
@@ -157,22 +148,11 @@ class OculusDriver : public rclcpp::Node {
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr sonar_model_pub_;
   void publishParameters();
 
-  /**
-   * @brief Publish fan image (polar to Cartesian conversion).
-   * @tparam Ping_t Ping data type.
-   * @param ping Ping data.
-   * @param header Message header.
-   */
-  template <typename Ping_t>
-  void publishFanImage(const Ping_t &ping, const std_msgs::msg::Header &header);
-
   std::string ip_address_;
   std::string frame_id_;
   std::string sonar_model_;
-  bool publish_fan_image_;
 
   liboculus::SonarConfiguration sonar_config_;
-  std::unique_ptr<PolarToCartesianConverter> polar_converter_;
 
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr param_callback_handle_;
 };

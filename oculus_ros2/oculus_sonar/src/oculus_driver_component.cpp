@@ -8,18 +8,15 @@
  */
 
 #include <boost/asio.hpp>
-
 #include "liboculus/Constants.h"
 #include "liboculus/SonarConfiguration.h"
 #include "oculus_sonar/oculus_driver_component.hpp"
 #include "oculus_sonar/publishing_data_rx.h"
-#include <cv_bridge/cv_bridge.h>
 
 namespace oculus_sonar {
 
 using liboculus::SimplePingResultV1;
 using liboculus::SimplePingResultV2;
-
 OculusDriver::OculusDriver(const rclcpp::NodeOptions & options)
   : Node("oculus_driver", options),
     io_srv_(),
@@ -39,7 +36,6 @@ void OculusDriver::init() {
   this->declare_parameter<std::string>("ip_address", "auto");
   this->declare_parameter<std::string>("frame_id", "oculus");
   this->declare_parameter<std::string>("sonar_model", "m750d");  // m750d or m1200d
-  this->declare_parameter<bool>("publish_fan_image", false);
   this->declare_parameter<double>("range", 2.0);
   this->declare_parameter<int>("gain", 100);
   this->declare_parameter<int>("gamma", 200);
@@ -56,12 +52,10 @@ void OculusDriver::init() {
   ip_address_ = this->get_parameter("ip_address").as_string();
   frame_id_ = this->get_parameter("frame_id").as_string();
   sonar_model_ = this->get_parameter("sonar_model").as_string();
-  publish_fan_image_ = this->get_parameter("publish_fan_image").as_bool();
   int freq_mode = this->get_parameter("freq_mode").as_int();
 
   // Initialize polar to Cartesian converter with frequency mode
   // Resolution is auto-calculated based on frequency mode
-  polar_converter_ = std::make_unique<PolarToCartesianConverter>(sonar_model_, freq_mode);
 
   RCLCPP_DEBUG(this->get_logger(), "Advertising topics in namespace %s",
                this->get_namespace());
@@ -77,11 +71,6 @@ void OculusDriver::init() {
   raw_data_pub_ = this->create_publisher<apl_msgs::msg::RawData>(topic_prefix + "/raw_data", 100);
   image_pub_ = this->create_publisher<sensor_msgs::msg::Image>(topic_prefix + "/image", 10);  // polar 이미지 (rviz2 호환용)
 
-  // Create fan image publisher if enabled
-  if (publish_fan_image_) {
-    fan_image_pub_ = this->create_publisher<sensor_msgs::msg::Image>(topic_prefix + "/fan_image", 10);
-    RCLCPP_INFO(this->get_logger(), "Fan image publishing enabled");
-  }
 
   // Create parameter publishers for recording
   ping_rate_pub_ = this->create_publisher<std_msgs::msg::Int32>(topic_prefix + "/param/ping_rate", 10);
@@ -165,12 +154,6 @@ rcl_interfaces::msg::SetParametersResult OculusDriver::parameterCallback(
       RCLCPP_INFO(this->get_logger(), "Setting freq mode to %s",
                   liboculus::FreqModeToString(freq_mode).c_str());
       setFreqMode(freq_mode);
-
-      // Update polar converter with new frequency mode
-      if (polar_converter_) {
-        polar_converter_->setFrequencyMode(freq_mode);
-        RCLCPP_INFO(this->get_logger(), "Auto-adjusted fan image resolution for freq_mode %d", freq_mode);
-      }
     }
     else if (param.get_name() == "data_size") {
       std::string data_size_str = param.as_string();
@@ -345,50 +328,6 @@ sensor_msgs::msg::Image OculusDriver::sonarToImage(
   
   return image_msg;
 }
-
-template <typename Ping_t>
-void OculusDriver::publishFanImage(const Ping_t &ping, const std_msgs::msg::Header &header) {
-  // Generate mapping if needed
-  polar_converter_->generateMapping(ping);
-
-  // Create polar image from ping data
-  cv::Mat polar_image(ping.ping()->nRanges, ping.ping()->nBeams, CV_8UC1);
-
-  for (int r = 0; r < ping.ping()->nRanges; ++r) {
-    for (int b = 0; b < ping.ping()->nBeams; ++b) {
-      if (ping.dataSize() == 1) {
-        polar_image.at<uint8_t>(r, b) = ping.image().at_uint8(b, r);
-      } else if (ping.dataSize() == 2) {
-        // Convert 16-bit to 8-bit by scaling
-        uint16_t val = ping.image().at_uint16(b, r);
-        polar_image.at<uint8_t>(r, b) = val >> 8;
-      } else if (ping.dataSize() == 4) {
-        // Convert 32-bit to 8-bit by scaling
-        uint32_t val = ping.image().at_uint32(b, r);
-        polar_image.at<uint8_t>(r, b) = val >> 24;
-      }
-    }
-  }
-
-  // Convert to Cartesian coordinates
-  cv::Mat fan_image = polar_converter_->convertToCartesian(polar_image, true);
-
-  // Convert to ROS message
-  cv_bridge::CvImage cv_image;
-  cv_image.header = header;
-  cv_image.encoding = "bgr8";  // After colormap application
-  cv_image.image = fan_image;
-
-  // Publish the fan image
-  fan_image_pub_->publish(*cv_image.toImageMsg());
-}
-
-// Explicit template instantiation
-template void OculusDriver::publishFanImage<liboculus::SimplePingResultV1>(
-    const liboculus::SimplePingResultV1 &ping, const std_msgs::msg::Header &header);
-template void OculusDriver::publishFanImage<liboculus::SimplePingResultV2>(
-    const liboculus::SimplePingResultV2 &ping, const std_msgs::msg::Header &header);
-
 void OculusDriver::publishParameters() {
   // Publish current parameters
   std_msgs::msg::Int32 ping_rate_msg;
