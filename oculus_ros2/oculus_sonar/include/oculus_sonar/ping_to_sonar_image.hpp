@@ -40,10 +40,40 @@ marine_acoustic_msgs::msg::SonarImage pingToSonarImage(
 
   const int num_bearings = ping.ping()->nBeams;
   const int num_ranges = ping.ping()->nRanges;
+  const int bearing_count = ping.bearings().size();
+
+  RCLCPP_INFO(rclcpp::get_logger("ping_to_sonar_image"),
+              "num_bearings: %d, bearing_count: %d", num_bearings, bearing_count);
 
   sonar_image.azimuth_angles.resize(num_bearings);
-  for (unsigned int b = 0; b < num_bearings; b++) {
-    sonar_image.azimuth_angles[b] = ping.bearings().at_rad(b);
+
+  // If we have 512 beams but only 256 bearings, interpolate
+  if (num_bearings == 512 && bearing_count <= 258) {
+    RCLCPP_INFO(rclcpp::get_logger("ping_to_sonar_image"),
+                "Interpolating bearings: 512 beams from %d bearings", bearing_count);
+    // Oculus sends 256 bearings for 512 beam mode, need to interpolate
+    for (unsigned int b = 0; b < num_bearings; b++) {
+      if (b % 2 == 0) {
+        // Even indices: use actual bearing data
+        sonar_image.azimuth_angles[b] = ping.bearings().at_rad(b / 2);
+      } else {
+        // Odd indices: interpolate between adjacent bearings
+        int idx = b / 2;
+        if (idx < bearing_count - 1) {
+          float bearing1 = ping.bearings().at_rad(idx);
+          float bearing2 = ping.bearings().at_rad(idx + 1);
+          sonar_image.azimuth_angles[b] = (bearing1 + bearing2) / 2.0f;
+        } else {
+          // Last beam, extrapolate
+          sonar_image.azimuth_angles[b] = ping.bearings().at_rad(bearing_count - 1);
+        }
+      }
+    }
+  } else {
+    // Normal case: one bearing per beam
+    for (unsigned int b = 0; b < num_bearings && b < bearing_count; b++) {
+      sonar_image.azimuth_angles[b] = ping.bearings().at_rad(b);
+    }
   }
 
   sonar_image.ranges.resize(num_ranges);

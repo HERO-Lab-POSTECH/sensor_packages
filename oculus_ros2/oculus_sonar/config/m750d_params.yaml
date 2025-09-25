@@ -1,0 +1,34 @@
+# m750d_params.yaml
+# Date: 251125
+# Description: ROS2 parameter configuration for Oculus M750d sonar
+
+oculus:
+  m750d:
+    ros__parameters:
+      # Model specific
+      sonar_model: "m750d"         # Oculus M750d
+
+      # Connection settings
+      ip_address: "192.168.0.200"  # Sonar IP address ("auto" for auto-detect)
+      frame_id: "oculus"           # Frame ID for published messages
+
+      # M750d typical configuration
+      range: 2.0                    # Range (meters), M750d: 0.1-120m
+      gain: 100                     # Gain (percentage), valid: 1-100
+      gamma: 200                    # Gamma correction, valid: 0-255
+      ping_rate: 3                  # 0=Normal, 1=High, 2=Highest, 3=Low, 4=Lowest, 5=Standby
+      freq_mode: 2                  # 1=LowFrequency(750kHz), 2=HighFrequency(1.2MHz)
+      data_size: "8bit"             # "8bit", "16bit", "32bit"
+      num_beams: 1                  # 0=256beams, 1=512beams
+
+      # Flags
+      send_range_as_meters: true
+      send_gain: true
+      send_simple_return: true
+      gain_assistance: false
+
+      # Fan image settings (polar to Cartesian conversion)
+      publish_fan_image: true        # Enable/disable fan image publishing
+                                       # Resolution auto-calculated based on freq_mode:
+                                       # 750kHz: 250 pixels/m (4mm resolution)
+                                       # 1.2MHz: 400 pixels/m (2.5mm resolution)

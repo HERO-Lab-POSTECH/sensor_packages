@@ -54,6 +54,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/../marine_acoustic_msgs/rosidl_g
 # Component library (replaces nodelet)
 add_library(oculus_driver_component SHARED
   src/oculus_driver_component.cpp
+  src/publishing_data_rx.cpp
   # TODO: Implement ReprocessOculusRawData component
   # src/reprocess_oculus_raw_data.cpp
 )
