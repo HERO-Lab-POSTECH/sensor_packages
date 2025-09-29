@@ -71,13 +71,32 @@ ament_target_dependencies(oculus_driver_component
   std_msgs
   sensor_msgs
   marine_acoustic_msgs
-  cv_bridge
-  image_transport
-  liboculus
-  OpenCV
-  Boost
   apl_msgs
   oculus_sonar_msgs
+  liboculus
+  Boost
+)
+
+# Fan Imager Component (separate from main driver)
+add_library(oculus_fan_imager_component SHARED
+  src/oculus_fan_imager.cpp
+)
+
+target_include_directories(oculus_fan_imager_component PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  ${liboculus_INCLUDE_DIRS}
+)
+
+ament_target_dependencies(oculus_fan_imager_component
+  rclcpp
+  rclcpp_components
+  sensor_msgs
+  marine_acoustic_msgs
+  cv_bridge
+  image_transport
+  OpenCV
+  liboculus
 )
 
 # Link with generated messages
@@ -87,6 +106,11 @@ target_link_libraries(oculus_driver_component
   g3log
 )
 
+target_link_libraries(oculus_fan_imager_component
+  ${liboculus_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+)
+
 # Register components (replaces nodelet plugin)
 rclcpp_components_register_nodes(oculus_driver_component 
   "oculus_sonar::OculusDriver"
@@ -94,10 +118,19 @@ rclcpp_components_register_nodes(oculus_driver_component
   # "oculus_sonar::ReprocessOculusRawData"
 )
 
+rclcpp_components_register_nodes(oculus_fan_imager_component
+  "oculus_sonar::OculusFanImager"
+)
+
 # Optional: create standalone executable too
 rclcpp_components_register_node(oculus_driver_component
   PLUGIN "oculus_sonar::OculusDriver"
   EXECUTABLE oculus_driver_node
+)
+
+rclcpp_components_register_node(oculus_fan_imager_component
+  PLUGIN "oculus_sonar::OculusFanImager"
+  EXECUTABLE oculus_fan_imager_node
 )
 
 # TODO: Implement ReprocessOculusRawData component and executable
@@ -117,7 +150,7 @@ rclcpp_components_register_node(oculus_driver_component
 # )
 
 # Install
-install(TARGETS oculus_driver_component
+install(TARGETS oculus_driver_component oculus_fan_imager_component
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -144,9 +177,11 @@ install(FILES plugins.xml
   DESTINATION share/${PROJECT_NAME}
 )
 
-# ping_to_sonar_image.hpp 설치 추가
+# ping_to_sonar_image.hpp 및 polar_to_cartesian.hpp 설치 추가
 install(FILES
   include/oculus_sonar/ping_to_sonar_image.hpp
+  include/oculus_sonar/polar_to_cartesian.hpp
+  include/oculus_sonar/oculus_fan_imager.hpp
   DESTINATION include/${PROJECT_NAME}
 )
 
@@ -166,7 +201,7 @@ ament_export_dependencies(
 )
 
 ament_export_include_directories(include)
-ament_export_libraries(oculus_driver_component)
+ament_export_libraries(oculus_driver_component oculus_fan_imager_component)
 
 # Testing
 #if(BUILD_TESTING)

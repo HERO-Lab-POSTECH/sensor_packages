@@ -29,7 +29,6 @@
 
 #include "oculus_sonar/publishing_data_rx.h"
 #include "oculus_sonar/ping_to_sonar_image.hpp"
-
 #include "marine_acoustic_msgs/msg/sonar_image.hpp"
 #include "oculus_sonar_msgs/msg/oculus_metadata.hpp"
 #include "apl_msgs/msg/raw_data.hpp"
@@ -66,6 +65,7 @@ class OculusDriver : public rclcpp::Node {
     imaging_sonar_pub_->publish(sonar_msg);
     auto image_msg = sonarToImage(sonar_msg);
     image_pub_->publish(image_msg);
+
     oculus_sonar_msgs::msg::OculusMetadata meta;
     meta.header = sonar_msg.header;
     for (unsigned int i = 0; i < ping.gains().size(); i++) {
@@ -145,10 +145,12 @@ class OculusDriver : public rclcpp::Node {
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr gamma_pub_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr ip_address_pub_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr frame_id_pub_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr sonar_model_pub_;
   void publishParameters();
 
   std::string ip_address_;
   std::string frame_id_;
+  std::string sonar_model_;
 
   liboculus::SonarConfiguration sonar_config_;
 

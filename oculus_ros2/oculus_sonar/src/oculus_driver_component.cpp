@@ -8,7 +8,6 @@
  */
 
 #include <boost/asio.hpp>
-
 #include "liboculus/Constants.h"
 #include "liboculus/SonarConfiguration.h"
 #include "oculus_sonar/oculus_driver_component.hpp"
@@ -18,7 +17,6 @@ namespace oculus_sonar {
 
 using liboculus::SimplePingResultV1;
 using liboculus::SimplePingResultV2;
-
 OculusDriver::OculusDriver(const rclcpp::NodeOptions & options)
   : Node("oculus_driver", options),
     io_srv_(),
@@ -37,6 +35,7 @@ void OculusDriver::init() {
   // Declare parameters with default values
   this->declare_parameter<std::string>("ip_address", "auto");
   this->declare_parameter<std::string>("frame_id", "oculus");
+  this->declare_parameter<std::string>("sonar_model", "m750d");  // m750d or m1200d
   this->declare_parameter<double>("range", 2.0);
   this->declare_parameter<int>("gain", 100);
   this->declare_parameter<int>("gamma", 200);
@@ -47,32 +46,42 @@ void OculusDriver::init() {
   this->declare_parameter<bool>("send_range_as_meters", true);
   this->declare_parameter<bool>("send_simple_return", true);
   this->declare_parameter<bool>("gain_assistance", false);
-  this->declare_parameter<int>("num_beams", 1); // 512 beams
+  // num_beams parameter removed - always request 512 beams (hardware may downsample automatically)
 
   // Get initial parameter values
   ip_address_ = this->get_parameter("ip_address").as_string();
   frame_id_ = this->get_parameter("frame_id").as_string();
+  sonar_model_ = this->get_parameter("sonar_model").as_string();
+  int freq_mode = this->get_parameter("freq_mode").as_int();
 
-  RCLCPP_DEBUG(this->get_logger(), "Advertising topics in namespace %s", 
+  // Initialize polar to Cartesian converter with frequency mode
+  // Resolution is auto-calculated based on frequency mode
+
+  RCLCPP_DEBUG(this->get_logger(), "Advertising topics in namespace %s",
                this->get_namespace());
+
+  // Create topic prefix based on sonar model
+  std::string topic_prefix = "/sensor/sonar/oculus/" + sonar_model_;
 
   // Create publishers
   imaging_sonar_pub_ = this->create_publisher<marine_acoustic_msgs::msg::SonarImage>(
-    "/sensor/sonar/oculus_m750d/image", 10);
+    topic_prefix + "/sonar", 10);  // SonarImage 메시지
   oculus_meta_pub_ = this->create_publisher<oculus_sonar_msgs::msg::OculusMetadata>(
-    "/sensor/sonar/oculus_m750d/metadata", 10);
-  raw_data_pub_ = this->create_publisher<apl_msgs::msg::RawData>("/sensor/sonar/oculus_m750d/raw_data", 100);
-  image_pub_ = this->create_publisher<sensor_msgs::msg::Image>("/sensor/sonar/oculus_m750d/raw", 10);  // rviz2 호환용
-  
+    topic_prefix + "/metadata", 10);
+  raw_data_pub_ = this->create_publisher<apl_msgs::msg::RawData>(topic_prefix + "/raw_data", 100);
+  image_pub_ = this->create_publisher<sensor_msgs::msg::Image>(topic_prefix + "/image", 10);  // polar 이미지 (rviz2 호환용)
+
+
   // Create parameter publishers for recording
-  ping_rate_pub_ = this->create_publisher<std_msgs::msg::Int32>("/sensor/sonar/oculus_m750d/param/ping_rate", 10);
-  freq_mode_pub_ = this->create_publisher<std_msgs::msg::Int32>("/sensor/sonar/oculus_m750d/param/freq_mode", 10);
-  data_size_pub_ = this->create_publisher<std_msgs::msg::String>("/sensor/sonar/oculus_m750d/param/data_size", 10);
-  range_pub_ = this->create_publisher<std_msgs::msg::Float32>("/sensor/sonar/oculus_m750d/param/range", 10);
-  gain_pub_ = this->create_publisher<std_msgs::msg::Int32>("/sensor/sonar/oculus_m750d/param/gain", 10);
-  gamma_pub_ = this->create_publisher<std_msgs::msg::Int32>("/sensor/sonar/oculus_m750d/param/gamma", 10);
-  ip_address_pub_ = this->create_publisher<std_msgs::msg::String>("/sensor/sonar/oculus_m750d/param/ip_address", 10);
-  frame_id_pub_ = this->create_publisher<std_msgs::msg::String>("/sensor/sonar/oculus_m750d/param/frame_id", 10);
+  ping_rate_pub_ = this->create_publisher<std_msgs::msg::Int32>(topic_prefix + "/param/ping_rate", 10);
+  freq_mode_pub_ = this->create_publisher<std_msgs::msg::Int32>(topic_prefix + "/param/freq_mode", 10);
+  data_size_pub_ = this->create_publisher<std_msgs::msg::String>(topic_prefix + "/param/data_size", 10);
+  range_pub_ = this->create_publisher<std_msgs::msg::Float32>(topic_prefix + "/param/range", 10);
+  gain_pub_ = this->create_publisher<std_msgs::msg::Int32>(topic_prefix + "/param/gain", 10);
+  gamma_pub_ = this->create_publisher<std_msgs::msg::Int32>(topic_prefix + "/param/gamma", 10);
+  ip_address_pub_ = this->create_publisher<std_msgs::msg::String>(topic_prefix + "/param/ip_address", 10);
+  frame_id_pub_ = this->create_publisher<std_msgs::msg::String>(topic_prefix + "/param/frame_id", 10);
+  sonar_model_pub_ = this->create_publisher<std_msgs::msg::String>(topic_prefix + "/param/sonar_model", 10);
 
   RCLCPP_INFO(this->get_logger(), "Publishing data with frame = %s", frame_id_.c_str());
 
@@ -97,12 +106,44 @@ void OculusDriver::init() {
     data_rx_.sendSimpleFireMessage(sonar_config_);
   });
 
+  // Always setup status callback to check actual sonar model
+  status_rx_.setCallback([&](const liboculus::SonarStatus &status, bool is_valid) {
+    if (!is_valid) return;
+
+    // Log the actual part number detected by hardware once
+    static bool logged = false;
+    if (!logged) {
+      uint16_t part_num = status.msg()->partNumber;
+      std::string detected_model = "Unknown";
+      if (part_num == 1032 || part_num == 2419 || part_num == 1434 || part_num == 1921 || part_num == 1244) {
+        detected_model = "M750d variant";
+      } else if (part_num == 1042 || part_num == 2420 || part_num == 1435 || part_num == 2086 || part_num == 1219) {
+        detected_model = "M1200d variant";
+      } else if (part_num == 1041 || part_num == 2418 || part_num == 1433 || part_num == 2294 || part_num == 1217) {
+        detected_model = "M370s variant (70° FOV!)";
+      } else if (part_num == 2203 || part_num == 2599 || part_num == 2659 || part_num == 2658) {
+        detected_model = "M3000d variant";
+      }
+
+      RCLCPP_WARN(this->get_logger(),
+                  "Hardware detected - Part Number: %u (%s), Expected: %s",
+                  part_num, detected_model.c_str(), sonar_model_.c_str());
+
+      if (detected_model.find("M370") != std::string::npos) {
+        RCLCPP_ERROR(this->get_logger(),
+                    "WARNING: Hardware is M370s with 70° FOV, but config expects %s with 130° FOV!",
+                    sonar_model_.c_str());
+      }
+      logged = true;
+    }
+
+    if (ip_address_ == "auto" && !data_rx_.isConnected()) {
+      data_rx_.connect(status.ipAddr());
+    }
+  });
+
   if (ip_address_ == "auto") {
     RCLCPP_INFO(this->get_logger(), "Attempting to auto-detect sonar");
-    status_rx_.setCallback([&](const liboculus::SonarStatus &status, bool is_valid) {
-      if (!is_valid || data_rx_.isConnected()) return;
-      data_rx_.connect(status.ipAddr());
-    });
   } else {
     RCLCPP_INFO(this->get_logger(), "Opening sonar at %s", ip_address_.c_str());
     data_rx_.connect(ip_address_);
@@ -142,7 +183,7 @@ rcl_interfaces::msg::SetParametersResult OculusDriver::parameterCallback(
     }
     else if (param.get_name() == "freq_mode") {
       int freq_mode = param.as_int();
-      RCLCPP_INFO(this->get_logger(), "Setting freq mode to %s", 
+      RCLCPP_INFO(this->get_logger(), "Setting freq mode to %s",
                   liboculus::FreqModeToString(freq_mode).c_str());
       setFreqMode(freq_mode);
     }
@@ -164,14 +205,6 @@ rcl_interfaces::msg::SetParametersResult OculusDriver::parameterCallback(
     else if (param.get_name() == "gain_assistance") {
       sonar_config_.setGainAssistance(param.as_bool());
     }
-    else if (param.get_name() == "num_beams") {
-      int num_beams = param.as_int();
-      if (num_beams == 0) { // 256 beams
-        sonar_config_.use256Beams();
-      } else { // 512 beams
-        sonar_config_.use512Beams();
-      }
-    }
   }
 
   RCLCPP_INFO(this->get_logger(), "Setting flags: 0x%s"
@@ -179,15 +212,13 @@ rcl_interfaces::msg::SetParametersResult OculusDriver::parameterCallback(
             "\n            data size %s"
             "\n      send gain       %s"
             "\n      simple return   %s"
-            "\n      gain assistance %s"
-            "\n        use 512 beams %s",
+            "\n      gain assistance %s",
             "",  // hex flags placeholder
             sonar_config_.getSendRangeAsMeters() ? "true" : "false",
             liboculus::DataSizeToString(sonar_config_.getDataSize()),
             sonar_config_.getSendGain() ? "true" : "false",
             sonar_config_.getSimpleReturn() ? "true" : "false",
-            sonar_config_.getGainAssistance() ? "true" : "false",
-            sonar_config_.get512Beams() ? "true" : "false");
+            sonar_config_.getGainAssistance() ? "true" : "false");
 
   // Update the sonar with new params
   if (data_rx_.isConnected()) {
@@ -210,7 +241,6 @@ void OculusDriver::updateSonarConfig() {
   bool send_gain = this->get_parameter("send_gain").as_bool();
   bool send_simple_return = this->get_parameter("send_simple_return").as_bool();
   bool gain_assistance = this->get_parameter("gain_assistance").as_bool();
-  int num_beams = this->get_parameter("num_beams").as_int();
 
   sonar_config_.setRange(range);
   sonar_config_.setGainPercent(gain);
@@ -224,11 +254,9 @@ void OculusDriver::updateSonarConfig() {
                 .setSimpleReturn(send_simple_return)
                 .setGainAssistance(gain_assistance);
 
-  if (num_beams == 0) {
-    sonar_config_.use256Beams();
-  } else {
-    sonar_config_.use512Beams();
-  }
+  // Always request 512 beams (no downsampling)
+  // M750d should provide 512 beams
+  sonar_config_.use512Beams();
 }
 
 void OculusDriver::setPingRate(int ping_rate) {
@@ -326,7 +354,6 @@ sensor_msgs::msg::Image OculusDriver::sonarToImage(
   
   return image_msg;
 }
-
 void OculusDriver::publishParameters() {
   // Publish current parameters
   std_msgs::msg::Int32 ping_rate_msg;
@@ -360,6 +387,10 @@ void OculusDriver::publishParameters() {
   std_msgs::msg::String frame_id_msg;
   frame_id_msg.data = this->get_parameter("frame_id").as_string();
   frame_id_pub_->publish(frame_id_msg);
+
+  std_msgs::msg::String sonar_model_msg;
+  sonar_model_msg.data = this->get_parameter("sonar_model").as_string();
+  sonar_model_pub_->publish(sonar_model_msg);
 }
 
 }  // namespace oculus_sonar
