@@ -88,7 +88,7 @@ def launch_setup(context, *args, **kwargs):
                 name='fan_imager',
                 namespace='oculus',
                 parameters=[{
-                    'input_topic': '/sensor/sonar/oculus/m750d/sonar',
+                    'input_topic': '/sensor/sonar/oculus/m750d/image',
                     'output_topic': '/sensor/sonar/oculus/m750d/fan_image',
                     'sonar_model': 'm750d',
                     'freq_mode': int(freq_mode) if freq_mode else 2,
@@ -182,7 +182,7 @@ def generate_launch_description():
 #
 # Topics published:
 # Driver:
-# - /sensor/sonar/oculus/m750d/sonar     (SonarImage)
+# - /sensor/sonar/oculus/m750d/image     (SonarImage)
 # - /sensor/sonar/oculus/m750d/image     (Image - polar)
 # - /sensor/sonar/oculus/m750d/metadata  (OculusMetadata)
 # - /sensor/sonar/oculus/m750d/raw_data  (RawData)
