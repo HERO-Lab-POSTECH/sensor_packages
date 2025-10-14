@@ -151,7 +151,7 @@ def generate_launch_description():
 #    ros2 launch oculus_sonar m750d.launch.py range:=5.0 ping_rate:=2 freq_mode:=1
 #
 # Topics published:
-# - /sensor/sonar/oculus/m750d/raw
+# - /sensor/sonar/oculus/m750d/sonar
 # - /sensor/sonar/oculus/m750d/image
 # - /sensor/sonar/oculus/m750d/metadata
 # - /sensor/sonar/oculus/m750d/raw_data

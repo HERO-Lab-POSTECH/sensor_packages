@@ -17,7 +17,7 @@ OculusFanImager::OculusFanImager(const rclcpp::NodeOptions& options)
 
 void OculusFanImager::init() {
   // Declare parameters with default values
-  this->declare_parameter<std::string>("input_topic", "/sensor/sonar/oculus/m750d/image");
+  this->declare_parameter<std::string>("input_topic", "/sensor/sonar/oculus/m750d/sonar");
   this->declare_parameter<std::string>("output_topic", "/sensor/sonar/oculus/m750d/fan_image");
   this->declare_parameter<std::string>("sonar_model", "m750d");
   this->declare_parameter<int>("freq_mode", 2);  // 1=low freq, 2=high freq
