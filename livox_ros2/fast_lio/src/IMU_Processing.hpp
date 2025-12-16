@@ -191,32 +191,8 @@ void ImuProcess::IMU_init(const MeasureGroup &meas, esekfom::esekf<state_ikfom, 
   }
   state_ikfom init_state = kf_state.get_x();
   init_state.grav = S2(- mean_acc / mean_acc.norm() * G_m_s2);
-
-  // Gravity alignment: align mean_acc to [0, 0, -G]
-  V3D gravity_world(0, 0, -G_m_s2);  // Horizontal reference: gravity points down
-  V3D gravity_body = mean_acc.normalized() * G_m_s2;  // Measured gravity direction
-
-  // Calculate rotation to align gravity_body with gravity_world (Rodrigues formula)
-  V3D v = gravity_body.cross(gravity_world);
-  double s = v.norm();
-  double c = gravity_body.dot(gravity_world) / (gravity_body.norm() * gravity_world.norm());
-
-  if (s > 1e-6) {  // Not parallel
-    M3D vx;
-    vx << 0, -v(2), v(1),
-          v(2), 0, -v(0),
-          -v(1), v(0), 0;
-    M3D R_align = Eye3d + vx + vx * vx * (1 - c) / (s * s);
-    init_state.rot = SO3(R_align);
-
-    // Log initial attitude
-    V3D euler_init = RotMtoEuler(R_align);
-    std::cout << "Gravity Alignment: Roll=" << euler_init(0) * 57.3
-              << " Pitch=" << euler_init(1) * 57.3
-              << " Yaw=" << euler_init(2) * 57.3 << " deg" << std::endl;
-  }
-  // If parallel (s <= 1e-6): keep Identity rotation
-
+  
+  //state_inout.rot = Eye3d; // Exp(mean_acc.cross(V3D(0, 0, -1 / scale_gravity)));
   init_state.bg  = mean_gyr;
   init_state.offset_T_L_I = Lidar_T_wrt_IMU;
   init_state.offset_R_L_I = Lidar_R_wrt_IMU;
