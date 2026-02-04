@@ -10,7 +10,7 @@ oculus:
 
       # Connection settings
       ip_address: "192.168.0.201"  # Sonar IP address ("auto" for auto-detect)
-      frame_id: "oculus"           # Frame ID for published messages
+      frame_id: "sonar_link"       # Frame ID for published messages (matches boat_description URDF)
 
       # M1200d typical configuration
       range: 10.0                   # Range (meters), M1200d: 0.1-40m
