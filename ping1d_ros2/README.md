@@ -16,13 +16,14 @@ ROS 2 package for Blue Robotics Ping Sonar Altimeter and Echosounder
 The source code is released under a [MIT license](LICENSE).
 
 ## Requirements
+
 [Ping Sonar Altimeter and Echosounder](https://bluerobotics.com/store/sensors-sonars-cameras/sonar/ping-sonar-r2-rp/)
 
 ## Installation
 
 Clone with `--recursive` in order to get the necessary `ping-python` library:
 
-```
+```bash
 cd dev_ws/src
 git clone -b master --recursive https://github.com/tasada038/ping1d_sonar.git
 cd ~/dev_ws/src/ping1d_sonar/ping1d_sonar/ping-python && python3 setup.py install --user
@@ -31,61 +32,58 @@ colcon build --packages-select ping1d_sonar
 ```
 
 ## Run
-Publish sonar data
-```
-. install/setup.bash
+
+Publish sonar data:
+```bash
+source install/setup.bash
 ros2 run ping1d_sonar ping1d_node
 ```
 
-Publish sonar data using Rviz2
-```
-. install/setup.bash
+Publish sonar data using RViz2:
+```bash
+source install/setup.bash
 ros2 launch ping1d_sonar ping_sonar.launch.py
 ```
 
 ![ping1d_rviz_img](img/ping1d_rviz.png)
 
-## Ping sonar Topics
-The topics of the ping1d_sonar are as follows.
+## Topics
 
-```
-$ ros2 topic list
-/ping1d/param/gain
-/ping1d/param/interval
-/ping1d/param/mode
-/ping1d/param/speed
-/ping1d/range
-```
+All topics use `BEST_EFFORT` QoS reliability policy for sensor data consistency.
 
-- std_msgs.msg Float32: /ping1d/param/gain
-- std_msgs.msg Float32: /ping1d/param/interval
-- std_msgs.msg Float32: /ping1d/param/mode
-- std_msgs.msg Float32: /ping1d/param/speed
-- sensor_msgs.msg Range: /ping1d/range
+### Published Topics
 
-## Ping sonar Parameters
-The parameters for the ping1d_sonar are as follows.
+| Topic | Type | Description |
+|-------|------|-------------|
+| `/sensor/sonar/ping1d/range` | sensor_msgs/Range | Range measurement with header |
+| `/sensor/sonar/ping1d/data` | std_msgs/Float32 | Distance measurement (meters) |
+| `/sensor/sonar/ping1d/param/gain` | std_msgs/Float32 | Current gain setting |
+| `/sensor/sonar/ping1d/param/interval` | std_msgs/Float32 | Ping interval (ms) |
+| `/sensor/sonar/ping1d/param/mode` | std_msgs/Float32 | Auto mode setting |
+| `/sensor/sonar/ping1d/param/speed` | std_msgs/Float32 | Speed of sound (mm/s) |
+| `/sensor/sonar/ping1d/param/confidence` | std_msgs/Float32 | Measurement confidence |
+| `/sensor/sonar/ping1d/param/pulse_duration` | std_msgs/Float32 | Transmit pulse duration |
 
-```
-$ ros2 param list
-/ping1d_node:
-  gain_num
-  interval_num
-  mode_auto
-  scan_lenght
-  scan_start
-  speed
-```
+### QoS Profile
 
-- gain_num parameter range is [0 - 6] (int).
-- interval_num range is [50 - 200] (int, ms).
-- mode_auto range is [0 or 1].
-- scan_lenght range is [2000 - 10000] (int ms). Blue Robotics Inc. default is 2000 mm.
-- scan_start range is [30 - 200]. Blue Robotics Inc. default is 100 mm.
-- scan_start range is [1050000 - 1550000] (int mm/s).
+- **Reliability**: BEST_EFFORT
+- **History**: KEEP_LAST
+- **Depth**: 5
+
+## Parameters
+
+| Parameter | Type | Range | Default | Description |
+|-----------|------|-------|---------|-------------|
+| `gain_num` | int | 0-6 | 1 | Sonar gain setting |
+| `interval_num` | int | 50-200 | 100 | Ping interval (ms) |
+| `mode_auto` | int | 0-1 | 1 | Auto mode (0=manual, 1=auto) |
+| `scan_length` | int | 2000-10000 | 2000 | Scan length (mm) |
+| `scan_start` | int | 30-200 | 100 | Scan start distance (mm) |
+| `speed` | int | 1050000-1550000 | 1450000 | Speed of sound (mm/s) |
+| `frame_id` | string | - | ping1d_link | TF frame ID for range messages |
 
 ## License
-This action is licensed under the MIT License. This project is originally created by [Blue Robotics](https://github.com/bluerobotics), and maintained continuously by Takumi Asada.
+
+This package is licensed under the MIT License. Originally created by [Blue Robotics](https://github.com/bluerobotics), and maintained by Takumi Asada.
 
 Projects in .gitmodules files are covered by Blue Robotics Inc's MIT License.
-Other software components are licensed under this project's license.

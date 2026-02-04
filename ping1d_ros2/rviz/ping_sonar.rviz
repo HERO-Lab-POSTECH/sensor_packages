@@ -47,7 +47,7 @@ Visualization Manager:
     - Class: jsk_rviz_plugin/Plotter2D
       Name: Distance[m]
       Enabled: true
-      Topic: /ping1d/data
+      Topic: /sensor/sonar/ping1d/data
       width: 100
       height: 50
       left: 50
@@ -61,7 +61,7 @@ Visualization Manager:
     - Class: jsk_rviz_plugin/Plotter2D
       Name: Speed[m/s]
       Enabled: true
-      Topic: /ping1d/param/speed
+      Topic: /sensor/sonar/ping1d/param/speed
       width: 100
       height: 50
       left: 50
@@ -75,7 +75,7 @@ Visualization Manager:
     - Class: jsk_rviz_plugin/Plotter2D
       Name: Interval[ms]
       Enabled: true
-      Topic: /ping1d/param/interval
+      Topic: /sensor/sonar/ping1d/param/interval
       width: 100
       height: 50
       left: 200
@@ -89,7 +89,7 @@ Visualization Manager:
     - Class: jsk_rviz_plugin/Plotter2D
       Name: Gain[int 0-6]
       Enabled: true
-      Topic: /ping1d/param/gain
+      Topic: /sensor/sonar/ping1d/param/gain
       width: 100
       height: 50
       left: 50
@@ -103,7 +103,7 @@ Visualization Manager:
     - Class: jsk_rviz_plugin/Plotter2D
       Name: Mode[0/1]
       Enabled: true
-      Topic: /ping1d/param/mode
+      Topic: /sensor/sonar/ping1d/param/mode
       width: 100
       height: 50
       left: 200
@@ -117,7 +117,12 @@ Visualization Manager:
 
     - Class: rviz_default_plugins/Range
       Name: Ping1D Range
-      Topic: /ping1d/range
+      Topic:
+        Value: /sensor/sonar/ping1d/range
+        Depth: 10
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
       Enabled: true
       Color: 255; 255; 255
       Alpha: 0.7

@@ -110,11 +110,11 @@ class EchoNode(Node):
         self.publisher = self.create_publisher(Image, self.topic, SENSOR_QOS,
                                                qos_overriding_options=qos_override_opts)
         
-        # Create parameter publishers for recording
-        self.range_pub = self.create_publisher(Int32, '/sensor/sonar/sonoptix/param/range', 10)
-        self.tx_mode_pub = self.create_publisher(String, '/sensor/sonar/sonoptix/param/tx_mode', 10)
-        self.power_state_pub = self.create_publisher(Bool, '/sensor/sonar/sonoptix/param/power_state', 10)
-        self.frame_id_pub = self.create_publisher(String, '/sensor/sonar/sonoptix/param/frame_id', 10)
+        # Create parameter publishers for recording (use sensor QoS for consistency)
+        self.range_pub = self.create_publisher(Int32, '/sensor/sonar/sonoptix/param/range', SENSOR_QOS)
+        self.tx_mode_pub = self.create_publisher(String, '/sensor/sonar/sonoptix/param/tx_mode', SENSOR_QOS)
+        self.power_state_pub = self.create_publisher(Bool, '/sensor/sonar/sonoptix/param/power_state', SENSOR_QOS)
+        self.frame_id_pub = self.create_publisher(String, '/sensor/sonar/sonoptix/param/frame_id', SENSOR_QOS)
         
         self.get_logger().info(f'Sonoptix Echo Initialized')
 

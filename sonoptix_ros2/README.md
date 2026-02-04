@@ -86,12 +86,17 @@ ros2 launch sonoptix_ros2 echo_decompress.launch.py
 
 **Description**: Publishes sonar profiles from the Sonoptix Echo.
 
-**Published Topics**: 
-- `/sensor/sonar/sonoptix/data` (`sensor_msgs/Image`, Raw Sonar Data)
-- `/sensor/sonar/sonoptix/param/range` (`std_msgs/Int32`, Current range parameter)
-- `/sensor/sonar/sonoptix/param/tx_mode` (`std_msgs/String`, Current tx_mode parameter)
-- `/sensor/sonar/sonoptix/param/power_state` (`std_msgs/Bool`, Current power state)
-- `/sensor/sonar/sonoptix/param/frame_id` (`std_msgs/String`, Current frame ID)
+**Published Topics**:
+
+| Topic | Type | Description |
+|-------|------|-------------|
+| `/sensor/sonar/sonoptix/data` | sensor_msgs/Image | Raw sonar data |
+| `/sensor/sonar/sonoptix/param/range` | std_msgs/Int32 | Current range parameter |
+| `/sensor/sonar/sonoptix/param/tx_mode` | std_msgs/String | Current tx_mode parameter |
+| `/sensor/sonar/sonoptix/param/power_state` | std_msgs/Bool | Current power state |
+| `/sensor/sonar/sonoptix/param/frame_id` | std_msgs/String | Current frame ID |
+
+**QoS Profile**: All topics use `BEST_EFFORT` reliability (KEEP_LAST, depth=5)
 
 **Parameters**: The parameters can be updated while running the node.
 
@@ -117,9 +122,14 @@ ros2 run sonoptix_ros2 echo
 
 **Subscribed Topics**: `/sensor/sonar/sonoptix/compressed` or `/sensor/sonar/sonoptix/data`
 
-**Published Topics**: 
-- `/sensor/sonar/sonoptix/image` (`sensor_msgs/Image`, Processed polar image)
-- `/sensor/sonar/sonoptix/param/contrast` (`std_msgs/Float32`, Current contrast parameter)
+**Published Topics**:
+
+| Topic | Type | Description |
+|-------|------|-------------|
+| `/sensor/sonar/sonoptix/image` | sensor_msgs/Image | Processed polar image |
+| `/sensor/sonar/sonoptix/param/contrast` | std_msgs/Float32 | Current contrast parameter |
+
+**QoS Profile**: All topics use `BEST_EFFORT` reliability (KEEP_LAST, depth=5)
 
 **Parameters**: The parameters can be updated while running the node.
 

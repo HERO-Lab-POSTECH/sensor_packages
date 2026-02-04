@@ -113,8 +113,8 @@ class EchoImager(Node):
             self.to_video = False
             self.publisher = self.create_publisher(Image, self.image_topic, SENSOR_QOS,
                                                    qos_overriding_options=qos_override_opts)
-            # Create parameter publisher for contrast
-            self.contrast_pub = self.create_publisher(Float32, '/sensor/sonar/sonoptix/param/contrast', 10)
+            # Create parameter publisher for contrast (use sensor QoS for consistency)
+            self.contrast_pub = self.create_publisher(Float32, '/sensor/sonar/sonoptix/param/contrast', SENSOR_QOS)
             self.get_logger().info("Publishing data to ros2 topic")
         else:
             if len(self.video_file) == 0:

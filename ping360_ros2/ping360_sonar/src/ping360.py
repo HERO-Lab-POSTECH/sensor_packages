@@ -7,6 +7,7 @@ import numpy as np
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import SingleThreadedExecutor
+from rclpy.qos import qos_profile_sensor_data
 from rcl_interfaces.msg import SetParametersResult, ParameterDescriptor, IntegerRange
 from rclpy.parameter import Parameter
 
@@ -86,19 +87,22 @@ class Ping360_node(Node):
 
 
     def init_publishers(self, image, scan, echo):
-        
+
         self.publish_image = image
         self.publish_scan = scan
         self.publish_echo = echo
-        
+
+        # Use sensor QoS for consistency across packages (BEST_EFFORT, KEEP_LAST)
+        sensor_qos = qos_profile_sensor_data
+
         if image and self.image_pub is None:
-            self.image_pub = self.create_publisher(Image, "/sensor/sonar/ping360/image", 1)
-            
+            self.image_pub = self.create_publisher(Image, "/sensor/sonar/ping360/image", sensor_qos)
+
         if scan and self.scan_pub is None:
-            self.scan_pub = self.create_publisher(LaserScan, "/sensor/sonar/ping360/scan", 1)
-            
+            self.scan_pub = self.create_publisher(LaserScan, "/sensor/sonar/ping360/scan", sensor_qos)
+
         if echo and self.echo_pub is None:
-            self.echo_pub = self.create_publisher(SonarEcho, "/sensor/sonar/ping360/echo", 1)
+            self.echo_pub = self.create_publisher(SonarEcho, "/sensor/sonar/ping360/echo", sensor_qos)
     
     def configureFromParams(self, changes = []):
         

@@ -23,12 +23,14 @@
 #-----------------------------------------------------------------------------------
 
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import Range
 
 class RangePublisher(Node):
     def __init__(self):
         super().__init__("range_publisher")
-        self.publisher_ = self.create_publisher(Range, "/sensor/sonar/ping1d/range", 10)
+        # Use sensor QoS for consistency across packages (BEST_EFFORT, KEEP_LAST)
+        self.publisher_ = self.create_publisher(Range, "/sensor/sonar/ping1d/range", qos_profile_sensor_data)
         self.timer_ = self.create_timer(1.0, self.publish_range)
 
     def publish_range(self):

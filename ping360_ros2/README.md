@@ -56,29 +56,45 @@ The package provides both C++ and Python nodes, they share the same ROS API and 
 
 The rotation of the sonar is only limited by the maximum range (hence the echo maximum duration). Images are updated at this rate even if they are actually published at a lower rate.
 
-## Published Topics 
+## Published Topics
 
-* **`scan_image`** ([sensor_msgs/Image])
+All topics use `BEST_EFFORT` QoS reliability policy for sensor data consistency.
+
+| Topic | Type | Description |
+|-------|------|-------------|
+| `/sensor/sonar/ping360/image` | sensor_msgs/Image | Grayscale sonar image |
+| `/sensor/sonar/ping360/echo` | ping360_sonar_msgs/SonarEcho | Raw sonar echo data |
+| `/sensor/sonar/ping360/scan` | sensor_msgs/LaserScan | Laser scan with detected ranges |
+
+### QoS Profile
+
+- **Reliability**: BEST_EFFORT
+- **History**: KEEP_LAST
+- **Depth**: 5
+
+### Topic Details
+
+* **`/sensor/sonar/ping360/image`** ([sensor_msgs/Image])
 
 	The generated sonar image in gray level. Each pixel is filled depending on the range and angular step of the sonar.
 	This topic can be toggled using the **publish_image** parameter. The C++ node uses [image_transport](http://wiki.ros.org/image_transport) while the Python one publishes raw images.
 
-* **`echo`** ([msg/SonarEcho])
+* **`/sensor/sonar/ping360/echo`** ([ping360_sonar_msgs/SonarEcho])
 
 	Publishes the raw sonar data in a custom message:
-	
-		Header header            #header info
-		float32 angle               # the measurement angle [rad]
-		uint8 gain  # Sonar Gain
-		uint16 number_of_samples 
+
+		Header header            # header info
+		float32 angle            # the measurement angle [rad]
+		uint8 gain               # Sonar Gain
+		uint16 number_of_samples
 		uint16 transmit_frequency # [kHz]
-		uint16 speed_of_sound # [m/s]
-		uint8 range      #  range value [m]
-		uint8[] intensities    # intensity data [0-255].  This is the actual data received from the sonar
-	
+		uint16 speed_of_sound    # [m/s]
+		uint8 range              # range value [m]
+		uint8[] intensities      # intensity data [0-255]
+
 	This topic can be toggled using the **publish_echo** parameter.
 
-* **`scan`** ([sensor_msgs/LaserScan])
+* **`/sensor/sonar/ping360/scan`** ([sensor_msgs/LaserScan])
 
 	Publishes a LaserScan msg with ranges detected above a certain intensity threshold (0-255). The intensities of the message are scaled down to (0,1).
 	This topic can be toggled using the **publish_scan** parameter.

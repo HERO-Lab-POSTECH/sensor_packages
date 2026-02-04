@@ -1,5 +1,6 @@
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import Image, PointCloud2
 from std_msgs.msg import Header
 from sensor_msgs_py import point_cloud2
@@ -10,17 +11,27 @@ class Ping360PointCloudFromImage(Node):
     def __init__(self):
         super().__init__('ping360_pointcloud_from_image')
 
+        # Declare parameters for topic names and frame_id
+        self.declare_parameter('input_topic', '/sensor/sonar/ping360/image')
+        self.declare_parameter('output_topic', '/sensor/sonar/ping360/pointcloud')
+        self.declare_parameter('frame_id', 'ping360_link')
+
+        input_topic = self.get_parameter('input_topic').value
+        output_topic = self.get_parameter('output_topic').value
+        self.frame_id = self.get_parameter('frame_id').value
+
+        # Use sensor QoS for consistency across packages
         self.subscription = self.create_subscription(
             Image,
-            '/ping360/scan_image',
+            input_topic,
             self.image_callback,
-            10
+            qos_profile_sensor_data
         )
 
         self.publisher = self.create_publisher(
             PointCloud2,
-            '/ping360/pointcloud',
-            10
+            output_topic,
+            qos_profile_sensor_data
         )
 
         # ping360 설정 (예시값)
@@ -52,7 +63,7 @@ class Ping360PointCloudFromImage(Node):
         # PointCloud2 메시지 생성
         header = Header()
         header.stamp = self.get_clock().now().to_msg()
-        header.frame_id = "ping360_link"
+        header.frame_id = self.frame_id
 
         pc2_msg = point_cloud2.create_cloud_xyz32(header, points)
         self.publisher.publish(pc2_msg)

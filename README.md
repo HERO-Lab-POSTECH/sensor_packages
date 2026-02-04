@@ -1,85 +1,88 @@
 # Marine Robotics Sensor Packages
 
-해양 로봇공학 응용을 위한 ROS2 (Humble) 센서 드라이버 패키지 모음입니다. 소나 시스템과 LiDAR SLAM을 포함합니다.
+A collection of ROS2 (Humble) sensor driver packages for marine robotics applications, including sonar systems and LiDAR SLAM.
 
 ## Overview
 
-이 저장소는 해양 로봇공학 응용을 위해 최적화된 센서 드라이버 패키지 모음을 포함합니다:
+This repository contains sensor driver packages optimized for marine robotics applications:
 
-- **소나 시스템**: Oculus 이미징 소나, Sonoptix 이미징 소나, Ping360 스캐닝 소나, Ping1D 고도계
-- **LiDAR 시스템**: Livox 드라이버 및 FAST-LIO SLAM
-- **지원 라이브러리**: 메시지 정의 및 통신 라이브러리
+- **Sonar Systems**: Oculus imaging sonar, Sonoptix imaging sonar, Ping360 scanning sonar, Ping1D altimeter
+- **LiDAR Systems**: Livox driver and FAST-LIO SLAM
+- **Support Libraries**: Message definitions and communication libraries
 
 ## Branch Structure
 
-- `humble-devel`: ROS2 Humble 패키지 (Ubuntu 22.04)
-- `noetic-devel`: ROS1 Noetic 패키지 (Ubuntu 20.04) - *준비 중*
+- `humble-devel`: ROS2 Humble packages (Ubuntu 22.04)
+- `noetic-devel`: ROS1 Noetic packages (Ubuntu 20.04) - *in preparation*
 
-## Package Sources & Modifications
+## Package Sources and Modifications
 
-### 수정된 패키지 (Modified Packages)
+### Modified Packages
 
 #### ping360_ros2
-- **원본 저장소**: https://github.com/CentraleNantesRobotics/ping360_sonar.git (branch: ros2)
-- **라이선스**: MIT License
-- **수정 사항**:
-  - launch 파일에 유연한 포트 설정을 위한 device 파라미터 추가
-  - UDP 연결 파라미터 추가 (udp_address, udp_port)
-  - baudrate 및 connection_type 파라미터로 launch 파일 개선
-  - 기본 device를 `/dev/ttyUSB0`에서 `/dev/ping360`으로 변경 (설정 가능)
+- **Original Repository**: https://github.com/CentraleNantesRobotics/ping360_sonar.git (branch: ros2)
+- **License**: MIT License
+- **Modifications**:
+  - Added device parameter for flexible port configuration in launch files
+  - Added UDP connection parameters (udp_address, udp_port)
+  - Improved launch file with baudrate and connection_type parameters
+  - Changed default device from `/dev/ttyUSB0` to `/dev/ping360` (configurable)
+  - Added BEST_EFFORT QoS for all publishers
 
 #### ping1d_ros2
-- **원본 저장소**: https://github.com/tasada038/ping_sonar_ros.git (branch: master)
-- **라이선스**: Apache License 2.0
-- **수정 사항**:
-  - launch 파일에 device 파라미터 추가
-  - 포괄적인 launch 파라미터 추가 (speed_of_sound, interval, gain 등)
-  - RViz 실행 제어를 위한 use_rviz 파라미터 추가
-  - 컴포넌트의 포트 파라미터 처리 수정
-  - 기본 device를 `/dev/ttyUSB0`에서 `/dev/ping`으로 변경 (설정 가능)
+- **Original Repository**: https://github.com/tasada038/ping_sonar_ros.git (branch: master)
+- **License**: Apache License 2.0
+- **Modifications**:
+  - Added device parameter to launch file
+  - Added comprehensive launch parameters (speed_of_sound, interval, gain, etc.)
+  - Added use_rviz parameter for RViz launch control
+  - Fixed port parameter handling in component
+  - Changed default device from `/dev/ttyUSB0` to `/dev/ping` (configurable)
+  - Added frame_id parameter for TF frame configuration
+  - Added BEST_EFFORT QoS for all publishers
 
-### 수정되지 않은 외부 패키지 (Unmodified External Packages)
+### Unmodified External Packages
 
-#### Livox 패키지
-- **fast_lio**: 
-  - 원본: https://github.com/Ericsii/FAST_LIO_ROS2.git
-  - 라이선스: GPL-2.0
-  - 설명: 실시간 LiDAR-관성 주행거리 측정 및 매핑
-- **livox_driver**: 
-  - 원본: https://github.com/Livox-SDK/livox_ros_driver2.git (branch: master)
-  - 라이선스: Livox SDK License
-  - 설명: Livox LiDAR ROS2 드라이버
-- **livox_sdk**: 
-  - 원본: https://github.com/Livox-SDK/Livox-SDK2.git (branch: master)
-  - 라이선스: Livox SDK License
-  - 설명: Livox LiDAR 통신 SDK
+#### Livox Packages
+- **fast_lio**:
+  - Original: https://github.com/Ericsii/FAST_LIO_ROS2.git
+  - License: GPL-2.0
+  - Description: Real-time LiDAR-inertial odometry and mapping
+- **livox_driver**:
+  - Original: https://github.com/Livox-SDK/livox_ros_driver2.git (branch: master)
+  - License: Livox SDK License
+  - Description: Livox LiDAR ROS2 driver
+- **livox_sdk**:
+  - Original: https://github.com/Livox-SDK/Livox-SDK2.git (branch: master)
+  - License: Livox SDK License
+  - Description: Livox LiDAR communication SDK
 
-#### Oculus 소나 의존성 패키지
-- **apl_msgs**: 
-  - 원본: https://gitlab.com/apl-ocean-engineering/apl_msgs.git (branch: ros2)
-  - 라이선스: BSD-3-Clause
-  - 설명: APL 해양 공학 메시지 정의
-- **marine_msgs**: 
-  - 원본: https://github.com/apl-ocean-engineering/marine_msgs.git (branch: ros2)
-  - 라이선스: BSD-3-Clause
-  - 설명: 해양 센서 메시지 정의
-- **liboculus**: 
-  - 원본: https://github.com/apl-ocean-engineering/liboculus.git (branch: dev/hybrid_ros1_ros2)
-  - 라이선스: BSD License
-  - 설명: Blueprint Subsea Oculus 소나 통신 라이브러리
-- **g3log**: 
-  - 원본: https://github.com/KjellKod/g3log.git (branch: master)
-  - 라이선스: Unlicense
-  - 설명: 비동기 로깅 라이브러리
+#### Oculus Sonar Dependencies
+- **apl_msgs**:
+  - Original: https://gitlab.com/apl-ocean-engineering/apl_msgs.git (branch: ros2)
+  - License: BSD-3-Clause
+  - Description: APL ocean engineering message definitions
+- **marine_msgs**:
+  - Original: https://github.com/apl-ocean-engineering/marine_msgs.git (branch: ros2)
+  - License: BSD-3-Clause
+  - Description: Marine sensor message definitions
+- **liboculus**:
+  - Original: https://github.com/apl-ocean-engineering/liboculus.git (branch: dev/hybrid_ros1_ros2)
+  - License: BSD License
+  - Description: Blueprint Subsea Oculus sonar communication library
+- **g3log**:
+  - Original: https://github.com/KjellKod/g3log.git (branch: master)
+  - License: Unlicense
+  - Description: Asynchronous logging library
 
-### 로컬 개발 패키지 (Locally Developed Packages)
-- **oculus_sonar**: Blueprint Subsea Oculus 이미징 소나용 커스텀 ROS2 드라이버
-- **oculus_sonar_msgs**: Oculus 소나 메시지 정의
-- **ping360_sonar_msgs**: Ping360 스캐닝 소나 메시지 정의
-- **sonoptix_ros2**: Sonoptix Echo 이미징 소나 ROS2 드라이버 (MIT License)
-  - TCP/IP 통신 기반 실시간 소나 데이터 수신
-  - 이미지 압축 및 스트리밍 지원
-  - ROS2 image_transport를 통한 효율적인 데이터 전송
+### Locally Developed Packages
+- **oculus_sonar**: Custom ROS2 driver for Blueprint Subsea Oculus imaging sonar
+- **oculus_sonar_msgs**: Oculus sonar message definitions
+- **ping360_sonar_msgs**: Ping360 scanning sonar message definitions
+- **sonoptix_ros2**: Sonoptix Echo imaging sonar ROS2 driver (MIT License)
+  - TCP/IP communication based real-time sonar data reception
+  - Image compression and streaming support
+  - Efficient data transfer via ROS2 image_transport
 
 ## Package Structure
 
@@ -105,7 +108,7 @@ sensor_packages/
 
 ## Installation
 
-### 사전 요구사항 (Prerequisites)
+### Prerequisites
 ```bash
 # ROS2 Humble
 sudo apt update
@@ -120,7 +123,7 @@ sudo apt install ros-humble-pcl-ros ros-humble-pcl-conversions
 sudo apt install ros-humble-tf2-sensor-msgs
 ```
 
-### 빌드 방법 (Building)
+### Building
 ```bash
 # Clone repository
 git clone -b humble-devel https://github.com/HERO-Lab-POSTECH/sensor_packages.git
@@ -141,7 +144,7 @@ source install/setup.bash
 
 ## Usage Examples
 
-### 소나 시스템 (Sonar Systems)
+### Sonar Systems
 ```bash
 # Oculus imaging sonar
 ros2 launch oculus_sonar oculus_launch.py
@@ -167,19 +170,28 @@ ros2 launch livox_driver msg_MID360_launch.py
 
 ## Topic Naming Convention
 
-모든 센서 토픽은 일관된 네이밍 컨벤션을 따릅니다:
+All sensor topics follow a consistent naming convention:
 ```
 /sensor/<sensor_type>/<manufacturer>_<model>/<data_type>
 ```
 
+### QoS Policy
+
+All sensor packages use a unified QoS profile for consistency:
+- **Reliability**: BEST_EFFORT
+- **History**: KEEP_LAST
+- **Depth**: 5-10
+
+This ensures proper communication between publishers and subscribers across different machines and during ROS bag recording.
+
 ### LiDAR Topics
-- **Livox MID360**: 
+- **Livox MID360**:
   - Points: `/sensor/lidar/livox_mid360/points`
   - IMU: `/sensor/ins/livox_mid360/imu`
-- **Livox Avia**: 
+- **Livox Avia**:
   - Points: `/sensor/lidar/livox_avia/points`
   - IMU: `/sensor/ins/livox_avia/imu`
-- **Livox HAP**: 
+- **Livox HAP**:
   - Points: `/sensor/lidar/livox_hap/points`
   - IMU: `/sensor/ins/livox_hap/imu`
 
@@ -193,9 +205,13 @@ ros2 launch livox_driver msg_MID360_launch.py
   - Image: `/sensor/sonar/ping360/image`
 - **Ping1D**:
   - Range: `/sensor/sonar/ping1d/range`
+  - Data: `/sensor/sonar/ping1d/data`
+  - Parameters: `/sensor/sonar/ping1d/param/*`
 - **Sonoptix Echo**:
   - Data: `/sensor/sonar/sonoptix/data`
   - Compressed: `/sensor/sonar/sonoptix/compressed`
+  - Image: `/sensor/sonar/sonoptix/image`
+  - Parameters: `/sensor/sonar/sonoptix/param/*`
 
 ### SLAM Output Topics
 - **FAST-LIO**:
@@ -206,14 +222,14 @@ ros2 launch livox_driver msg_MID360_launch.py
 
 ## Device Configuration
 
-### 기본 디바이스 경로 (Default Device Paths)
-패키지는 다음의 기본 디바이스 경로를 사용합니다 (launch 파라미터로 변경 가능):
-- **Ping360**: `/dev/ping360` (또는 `/dev/ttyUSB0`)
-- **Ping1D**: `/dev/ping` (또는 `/dev/ttyUSB0`)
-- **Oculus**: 네트워크를 통한 자동 탐색
+### Default Device Paths
+Packages use the following default device paths (configurable via launch parameters):
+- **Ping360**: `/dev/ping360` (or `/dev/ttyUSB0`)
+- **Ping1D**: `/dev/ping` (or `/dev/ttyUSB0`)
+- **Oculus**: Auto-discovery via network
 
-### Udev Rules (선택사항)
-일관된 디바이스 명명을 위해 udev rules를 생성할 수 있습니다:
+### Udev Rules (Optional)
+Create udev rules for consistent device naming:
 
 ```bash
 # /etc/udev/rules.d/99-marine-sensors.rules
@@ -223,102 +239,103 @@ SUBSYSTEM=="tty", ATTRS{serial}=="PING1D_SERIAL", SYMLINK+="ping"
 sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
 
-### Launch 파라미터 (Launch Parameters)
+### Launch Parameters
 
 #### Ping360
-- `device`: 시리얼 디바이스 경로 (기본값: `/dev/ping360`)
-- `baudrate`: 시리얼 통신 속도 (기본값: 115200)
-- `connection_type`: 'serial' 또는 'udp' (기본값: serial)
-- `udp_address`: 네트워크 연결용 UDP 주소
-- `udp_port`: 네트워크 연결용 UDP 포트
+- `device`: Serial device path (default: `/dev/ping360`)
+- `baudrate`: Serial communication speed (default: 115200)
+- `connection_type`: 'serial' or 'udp' (default: serial)
+- `udp_address`: UDP address for network connection
+- `udp_port`: UDP port for network connection
 
 #### Ping1D
-- `device`: 시리얼 디바이스 경로 (기본값: `/dev/ping`)
-- `speed_of_sound`: 음속 mm/s 단위 (기본값: 1450000)
-- `interval`: 핑 간격 ms 단위 (기본값: 100)
-- `gain`: 게인 설정 0-6 (기본값: 1)
-- `scan_start`: 시작 거리 mm 단위 (기본값: 100)
-- `scan_length`: 스캔 길이 mm 단위 (기본값: 3000)
-- `use_rviz`: RViz 시각화 실행 (기본값: true)
+- `device`: Serial device path (default: `/dev/ping`)
+- `speed_of_sound`: Speed of sound in mm/s (default: 1450000)
+- `interval`: Ping interval in ms (default: 100)
+- `gain`: Gain setting 0-6 (default: 1)
+- `scan_start`: Start distance in mm (default: 100)
+- `scan_length`: Scan length in mm (default: 3000)
+- `use_rviz`: Launch RViz visualization (default: true)
+- `frame_id`: TF frame ID (default: ping1d_link)
 
 #### Sonoptix Echo
-- `ip`: 소나 IP 주소 (기본값: 192.168.0.203)
-- `range`: 소나 범위 [m] (기본값: 12)
-- `tx_mode`: 송신 모드 'auto' 또는 'manual' (기본값: auto)
-- `power_state`: 초기 전원 상태 (기본값: True)
-- `data_topic`: 원시 소나 데이터 토픽 (기본값: /sensor/sonar/sonoptix/data)
-- `compressed_topic`: 압축된 소나 데이터 토픽 (기본값: /sensor/sonar/sonoptix/compressed)
-- `frame_id`: 소나 데이터 프레임 ID (기본값: echo)
-- `compression_level`: 압축 레벨 1-9 (기본값: 1)
-- `reliability`: QoS 신뢰성 설정 'best_effort' 또는 'reliable' (기본값: best_effort)
+- `ip`: Sonar IP address (default: 192.168.0.203)
+- `range`: Sonar range in meters (default: 12)
+- `tx_mode`: Transmit mode 'auto' or 'manual' (default: auto)
+- `power_state`: Initial power state (default: True)
+- `data_topic`: Raw sonar data topic (default: /sensor/sonar/sonoptix/data)
+- `compressed_topic`: Compressed sonar data topic (default: /sensor/sonar/sonoptix/compressed)
+- `frame_id`: Sonar data frame ID (default: echo)
+- `compression_level`: Compression level 1-9 (default: 1)
+- `reliability`: QoS reliability setting 'best_effort' or 'reliable' (default: best_effort)
 
-**참고**: echo.launch.py는 자동으로 image_transport 노드를 실행하여 raw 이미지를 compressed 형식으로 변환합니다.
+**Note**: echo.launch.py automatically runs image_transport node to convert raw images to compressed format.
 
 ## Network Configuration
 
-### Sonoptix Echo 소나 네트워크 설정
+### Sonoptix Echo Sonar Network Setup
 
-Sonoptix Echo 소나를 사용하기 위해서는 올바른 네트워크 설정이 필요합니다:
+Proper network configuration is required for Sonoptix Echo sonar:
 
-#### 기본 네트워크 설정
-- **센서 IP**: `192.168.0.203` (기본값)
-- **컴퓨터 IP**: `192.168.0.12` (권장)
-- **네트워크 대역**: `192.168.0.x/24`
+#### Default Network Settings
+- **Sensor IP**: `192.168.0.203` (default)
+- **Computer IP**: `192.168.0.12` (recommended)
+- **Network Subnet**: `192.168.0.x/24`
 
-#### 네트워크 설정 명령어
+#### Network Configuration Commands
 ```bash
-# 센서와 같은 네트워크 대역으로 설정
+# Set computer to same network subnet as sensor
 sudo ip addr del 192.168.2.42/24 dev enx3c18a0127d4c
 sudo ip addr add 192.168.0.12/24 dev enx3c18a0127d4c
 
-# 연결 테스트
+# Test connection
 ping 192.168.0.203
 curl http://192.168.0.203:8000/api/v1/status
 ```
 
-#### 문제 해결
-- **Connection refused**: 센서가 완전히 부팅되지 않았거나 다른 포트를 사용 중
-- **No route to host**: 네트워크 대역이 다름 (센서와 컴퓨터가 다른 서브넷에 있음)
-- **센서 IP 확인**: ARP 테이블에서 센서 IP 확인
+#### Troubleshooting
+- **Connection refused**: Sensor not fully booted or using different port
+- **No route to host**: Network subnet mismatch (sensor and computer on different subnets)
+- **Check sensor IP**: Verify sensor IP in ARP table
   ```bash
   arp -a | grep enx3c18a0127d4c
   ```
 
 ## Troubleshooting
 
-### 일반적인 문제 해결 (Common Issues)
+### Common Issues
 
-1. **디바이스를 찾을 수 없음**: USB 권한 확인
+1. **Device not found**: Check USB permissions
    ```bash
    sudo chmod 666 /dev/ttyUSB*
    ```
 
-2. **빌드 에러**: 모든 의존성이 설치되었는지 확인
+2. **Build errors**: Ensure all dependencies are installed
    ```bash
    rosdep install --from-paths src --ignore-src -y
    ```
 
-3. **Livox SDK 문제**: SDK가 제대로 소스되었는지 확인
+3. **Livox SDK issues**: Ensure SDK is properly sourced
    ```bash
    source ~/ros2_ws/install/setup.bash
    ```
 
-4. **rosidl_typesupport_c 에러**: ROS2 메시지 생성 패키지 설치
+4. **rosidl_typesupport_c error**: Install ROS2 message generation packages
    ```bash
    sudo apt install ros-humble-rosidl-typesupport-c ros-humble-rosidl-default-generators
    ```
 
 ## Contributing
 
-기여를 환영합니다! 적절한 브랜치에 Pull Request를 제출해주세요:
-- `humble-devel`: ROS2 Humble 변경사항
-- `noetic-devel`: ROS1 Noetic 변경사항
+Contributions are welcome! Please submit Pull Requests to the appropriate branch:
+- `humble-devel`: ROS2 Humble changes
+- `noetic-devel`: ROS1 Noetic changes
 
 ## License
 
-각 패키지는 원본 라이선스를 유지합니다. 구체적인 라이선스 파일은 각 패키지 디렉토리를 참조하세요:
+Each package maintains its original license. See individual package directories for specific license files:
 
-### 외부 패키지 라이선스
+### External Package Licenses
 - **ping360_ros2**: MIT License (CentraleNantesRobotics)
 - **ping1d_ros2**: Apache License 2.0 (tasada038)
 - **fast_lio**: GPL-2.0 License (Ericsii)
@@ -327,7 +344,7 @@ curl http://192.168.0.203:8000/api/v1/status
 - **apl_msgs/marine_msgs**: BSD-3-Clause License
 - **g3log**: Unlicense (Public Domain)
 
-### 로컬 개발 패키지
+### Locally Developed Package Licenses
 - **oculus_sonar**: MIT License
 - **oculus_sonar_msgs**: MIT License
 - **ping360_sonar_msgs**: MIT License
@@ -341,18 +358,18 @@ HERO Lab, POSTECH
 
 ## Acknowledgments
 
-이 저장소는 다음 기여자들의 패키지를 포함합니다:
-- **CentraleNantesRobotics**: Ping360 드라이버 제공
-- **Blue Robotics**: Ping 소나 라이브러리 제공
-- **Livox-SDK Team**: LiDAR 드라이버 제공
-- **APL Ocean Engineering**: 해양 메시지 정의 제공
-- **Fast-LIO Team (HKU Mars Lab)**: SLAM 구현 제공
-- **tasada038**: Ping1D ROS2 드라이버 제공
-- **KjellKod**: g3log 로깅 라이브러리 제공
+This repository includes packages from the following contributors:
+- **CentraleNantesRobotics**: Ping360 driver
+- **Blue Robotics**: Ping sonar libraries
+- **Livox-SDK Team**: LiDAR driver
+- **APL Ocean Engineering**: Marine message definitions
+- **Fast-LIO Team (HKU Mars Lab)**: SLAM implementation
+- **tasada038**: Ping1D ROS2 driver
+- **KjellKod**: g3log logging library
 
 ## Original Sources
 
-원본 코드 출처 및 상세 정보:
+Original code sources and detailed information:
 - Ping360: https://github.com/CentraleNantesRobotics/ping360_sonar
 - Ping1D: https://github.com/tasada038/ping_sonar_ros
 - FAST-LIO: https://github.com/hku-mars/FAST_LIO

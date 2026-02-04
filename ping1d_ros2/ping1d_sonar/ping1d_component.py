@@ -23,6 +23,7 @@
 #-----------------------------------------------------------------------------------
 
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import Range
 from std_msgs.msg import Float32
 
@@ -36,14 +37,19 @@ module = importlib.import_module(module_name)
 class Ping1dComponent(Node):
   def __init__(self):
     super().__init__("ping1d_node")
-    self.publisher_ = self.create_publisher(Range, "/sensor/sonar/ping1d/range", 10)
-    self.dist_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/data", 10)
-    self.speed_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/speed", 10)
-    self.interval_num_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/interval_num", 10)
-    self.gain_num_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/gain_num", 10)
-    self.mode_auto_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/mode_auto", 10)
-    self.scan_start_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/scan_start", 10)
-    self.scan_lenght_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/scan_lenght", 10)
+
+    # Use sensor QoS for consistency across packages (BEST_EFFORT, KEEP_LAST)
+    sensor_qos = qos_profile_sensor_data
+
+    # Publishers with sensor QoS
+    self.publisher_ = self.create_publisher(Range, "/sensor/sonar/ping1d/range", sensor_qos)
+    self.dist_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/data", sensor_qos)
+    self.speed_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/speed", sensor_qos)
+    self.interval_num_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/interval_num", sensor_qos)
+    self.gain_num_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/gain_num", sensor_qos)
+    self.mode_auto_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/mode_auto", sensor_qos)
+    self.scan_start_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/scan_start", sensor_qos)
+    self.scan_lenght_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/scan_lenght", sensor_qos)
     self.timer_ = self.create_timer(0.1, self.range_callback)
 
     ### Declare ROS 2 Parameter
@@ -61,6 +67,8 @@ class Ping1dComponent(Node):
     self.mode_auto_:int = self.get_parameter('mode_auto').value
     self.declare_parameter('port', '/dev/ping')  # Original default value
     self.port:str = self.get_parameter('port').value
+    self.declare_parameter('frame_id', 'ping1d_link')  # Parameterized frame_id
+    self.frame_id:str = self.get_parameter('frame_id').value
 
     self.param_handler_ptr_ = self.add_on_set_parameters_callback(self.set_param_callback)
 
@@ -157,7 +165,7 @@ class Ping1dComponent(Node):
     ### ROS 2 data publisher
     range_msg = Range()
     range_msg.header.stamp = self.get_clock().now().to_msg()
-    range_msg.header.frame_id = "range_link"
+    range_msg.header.frame_id = self.frame_id
     range_msg.radiation_type = Range.ULTRASOUND
     range_msg.field_of_view = 0.1 # [rad]
     range_msg.min_range = float(range_data["scan_start"]/1000) # [m]
