@@ -146,8 +146,9 @@ source install/setup.bash
 
 ### Sonar Systems
 ```bash
-# Oculus imaging sonar
-ros2 launch oculus_sonar oculus_launch.py
+# Oculus imaging sonar (unified launch for all models)
+ros2 launch oculus_sonar oculus.launch.py sonar_model:=m750d
+ros2 launch oculus_sonar oculus.launch.py sonar_model:=m3000d with_fan:=true
 
 # Ping360 scanning sonar
 ros2 launch ping360_sonar ping360.launch.py device:=/dev/ttyUSB0
@@ -196,9 +197,11 @@ This ensures proper communication between publishers and subscribers across diff
   - IMU: `/sensor/ins/livox_hap/imu`
 
 ### Sonar Topics
-- **Oculus M750d**:
-  - Raw: `/sensor/sonar/oculus_m750d/raw`
-  - Image: `/sensor/sonar/oculus_m750d/image`
+- **Oculus M750d/M1200d/M3000d** (unified topic structure):
+  - Sonar: `/sensor/sonar/oculus/{model}/sonar`
+  - Image: `/sensor/sonar/oculus/{model}/image`
+  - Fan Image: `/sensor/sonar/oculus/{model}/fan_image` (with_fan:=true)
+  - Metadata: `/sensor/sonar/oculus/{model}/metadata`
 - **Ping360**:
   - Echo: `/sensor/sonar/ping360/echo`
   - Scan: `/sensor/sonar/ping360/scan`

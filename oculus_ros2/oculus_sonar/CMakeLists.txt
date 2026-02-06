@@ -78,8 +78,11 @@ ament_target_dependencies(oculus_driver_component
 )
 
 # Fan Imager Component (separate from main driver)
+# Includes sonar_config and polar_to_cartesian for coordinate conversion
 add_library(oculus_fan_imager_component SHARED
   src/oculus_fan_imager.cpp
+  src/polar_to_cartesian.cpp
+  src/sonar_config.cpp
 )
 
 target_include_directories(oculus_fan_imager_component PUBLIC
@@ -177,10 +180,11 @@ install(FILES plugins.xml
   DESTINATION share/${PROJECT_NAME}
 )
 
-# ping_to_sonar_image.hpp 및 polar_to_cartesian.hpp 설치 추가
+# Header files installation
 install(FILES
   include/oculus_sonar/ping_to_sonar_image.hpp
   include/oculus_sonar/polar_to_cartesian.hpp
+  include/oculus_sonar/sonar_config.hpp
   include/oculus_sonar/oculus_fan_imager.hpp
   DESTINATION include/${PROJECT_NAME}
 )

@@ -1,0 +1,35 @@
+# m3000d_params.yaml
+# Date: 260206
+# Description: ROS2 parameter configuration for Oculus M3000d sonar
+#
+# M3000d Specifications (Blueprint Subsea):
+#   Low freq (1.2MHz):  130° FOV, 30m range, 2.5mm resolution
+#   High freq (3.0MHz): 40° FOV, 5m range, 2.0mm resolution
+
+oculus:
+  m3000d:
+    ros__parameters:
+      # Model specific
+      sonar_model: "m3000d"        # Oculus M3000d (highest frequency model)
+
+      # Connection settings
+      ip_address: "192.168.0.202"  # Sonar IP address ("auto" for auto-detect)
+      frame_id: "sonar_link"       # Frame ID for published messages
+
+      # M3000d typical configuration (high frequency mode)
+      range: 5.0                    # Range (meters), M3000d: 0.1-30m (low), 0.1-5m (high)
+      gain: 100                     # Gain (percentage), valid: 1-100
+      gamma: 200                    # Gamma correction, valid: 0-255
+      ping_rate: 2                  # 0=Normal, 1=High, 2=Highest, 3=Low, 4=Lowest, 5=Standby
+      freq_mode: 1                  # 1=LowFrequency(1.2MHz, 130° FOV), 2=HighFrequency(3.0MHz, 40° FOV)
+      data_size: "8bit"             # "8bit", "16bit", "32bit"
+      num_beams: 1                  # 0=256beams, 1=512beams
+
+      # Flags
+      send_range_as_meters: true
+      send_gain: true
+      send_simple_return: true
+      gain_assistance: false
+
+      # Fan image settings removed - use separate fan_imager node instead
+      # To enable fan image, launch with m3000d_with_fan.launch.py

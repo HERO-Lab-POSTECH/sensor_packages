@@ -94,10 +94,12 @@ SetParametersResult Ping360Sonar::parametersCallback(const vector<rclcpp::Parame
 
 void Ping360Sonar::initPublishers(bool image, bool scan, bool echo)
 {
-#ifdef PING360_PUBLISH_RELIABLE
-  const auto qos{rclcpp::QoS(5)};
-#else
+  // Default: RELIABLE QoS with depth 10 for consistent sensor data delivery
+  // Use PING360_PUBLISH_BEST_EFFORT to switch to SensorDataQoS (BEST_EFFORT)
+#ifdef PING360_PUBLISH_BEST_EFFORT
   const auto qos{rclcpp::SensorDataQoS()};
+#else
+  const auto qos{rclcpp::QoS(10)};  // RELIABLE (ROS2 default)
 #endif
 
   publish_echo = echo;

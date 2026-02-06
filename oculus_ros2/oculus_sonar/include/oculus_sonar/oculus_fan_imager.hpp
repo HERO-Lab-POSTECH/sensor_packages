@@ -1,10 +1,12 @@
 /**
  * @file oculus_fan_imager.hpp
- * @date 251209
+ * @date 260206
  * @brief ROS2 Oculus Fan Image Converter Node
  *
- * This node subscribes to Oculus sonar polar images and converts them to 
+ * This node subscribes to Oculus sonar polar images and converts them to
  * Cartesian (fan) images for better visualization.
+ *
+ * Supports M750d, M1200d, and M3000d sonar models with configurable colormaps.
  */
 
 #pragma once
@@ -69,7 +71,7 @@ private:
   std::string sonar_model_;
   int freq_mode_;
   bool apply_colormap_;
-  int colormap_type_;
+  std::string colormap_name_;  // Colormap name (e.g., "viridis", "turbo", "hot")
 
   // Polar to Cartesian converter
   std::unique_ptr<PolarToCartesianConverter> polar_converter_;
