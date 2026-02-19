@@ -82,9 +82,8 @@ void OculusFanImager::init() {
     input_topic_, qos,
     std::bind(&OculusFanImager::sonarImageCallback, this, std::placeholders::_1));
 
-  // Create publisher
-  fan_image_pub_ = this->create_publisher<sensor_msgs::msg::Image>(
-    output_topic_, 10);
+  // Create publisher (image_transport: raw + compressed 자동 생성)
+  fan_image_pub_ = image_transport::create_publisher(this, output_topic_, rmw_qos_profile_default);
 
   // Setup parameter callback for dynamic reconfiguration
   param_callback_handle_ = this->add_on_set_parameters_callback(
@@ -151,7 +150,7 @@ void OculusFanImager::sonarImageCallback(
     out_msg.image = fan_image;
 
     // Publish fan image
-    fan_image_pub_->publish(*out_msg.toImageMsg());
+    fan_image_pub_.publish(*out_msg.toImageMsg());
 
     // Update statistics
     frame_count_++;

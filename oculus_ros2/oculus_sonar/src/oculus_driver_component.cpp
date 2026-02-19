@@ -69,7 +69,7 @@ void OculusDriver::init() {
   oculus_meta_pub_ = this->create_publisher<oculus_sonar_msgs::msg::OculusMetadata>(
     topic_prefix + "/metadata", 10);
   raw_data_pub_ = this->create_publisher<apl_msgs::msg::RawData>(topic_prefix + "/raw_data", 100);
-  image_pub_ = this->create_publisher<sensor_msgs::msg::Image>(topic_prefix + "/image", 10);  // polar 이미지 (rviz2 호환용)
+  image_pub_ = image_transport::create_publisher(this, topic_prefix + "/image", rmw_qos_profile_default);  // polar 이미지 (raw + compressed 자동 생성)
 
 
   // Create parameter publishers for recording

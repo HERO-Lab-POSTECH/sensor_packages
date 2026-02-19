@@ -16,6 +16,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <image_transport/image_transport.hpp>
 #include <marine_acoustic_msgs/msg/sonar_image.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/opencv.hpp>
@@ -63,7 +64,7 @@ private:
 
   // Subscribers and Publishers
   rclcpp::Subscription<marine_acoustic_msgs::msg::SonarImage>::SharedPtr sonar_sub_;
-  rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr fan_image_pub_;
+  image_transport::Publisher fan_image_pub_;
 
   // Parameters
   std::string input_topic_;
