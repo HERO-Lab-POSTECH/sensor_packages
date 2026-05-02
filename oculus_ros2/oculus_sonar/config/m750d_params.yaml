@@ -16,8 +16,8 @@ oculus:
       range: 10.0                    # Range (meters), M750d: 0.1-120m
       gain: 100                     # Gain (percentage), valid: 1-100
       gamma: 200                    # Gamma correction, valid: 0-255
-      ping_rate: 3                  # 0=Normal, 1=High, 2=Highest, 3=Low, 4=Lowest, 5=Standby
-      freq_mode: 2                  # 1=LowFrequency(750kHz), 2=HighFrequency(1.2MHz)
+      ping_rate: 2                  # 0=Normal, 1=High, 2=Highest, 3=Low, 4=Lowest, 5=Standby
+      freq_mode: 2            # 1=LowFrequency(750kHz), 2=HighFrequency(1.2MHz)
       data_size: "8bit"             # "8bit", "16bit", "32bit"
       # num_beams: 1                # Ignored - always requests 512 beams (hardware may downsample)
 

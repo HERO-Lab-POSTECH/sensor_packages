@@ -64,24 +64,27 @@ void OculusDriver::init() {
   std::string topic_prefix = "/sensor/sonar/oculus/" + sonar_model_;
 
   // Create publishers
+  // Use BEST_EFFORT QoS for all sensor data publishers
+  auto sensor_qos = rclcpp::SensorDataQoS();
+
   imaging_sonar_pub_ = this->create_publisher<marine_acoustic_msgs::msg::SonarImage>(
-    topic_prefix + "/sonar", 10);  // SonarImage 메시지
+    topic_prefix + "/sonar", sensor_qos);  // SonarImage 메시지
   oculus_meta_pub_ = this->create_publisher<oculus_sonar_msgs::msg::OculusMetadata>(
-    topic_prefix + "/metadata", 10);
-  raw_data_pub_ = this->create_publisher<apl_msgs::msg::RawData>(topic_prefix + "/raw_data", 100);
-  image_pub_ = this->create_publisher<sensor_msgs::msg::Image>(topic_prefix + "/image", 10);  // polar 이미지 (rviz2 호환용)
+    topic_prefix + "/metadata", sensor_qos);
+  raw_data_pub_ = this->create_publisher<apl_msgs::msg::RawData>(topic_prefix + "/raw_data", sensor_qos);
+  image_pub_ = image_transport::create_publisher(this, topic_prefix + "/image", rmw_qos_profile_sensor_data);  // polar 이미지 (raw + compressed 자동 생성)
 
 
   // Create parameter publishers for recording
-  ping_rate_pub_ = this->create_publisher<std_msgs::msg::Int32>(topic_prefix + "/param/ping_rate", 10);
-  freq_mode_pub_ = this->create_publisher<std_msgs::msg::Int32>(topic_prefix + "/param/freq_mode", 10);
-  data_size_pub_ = this->create_publisher<std_msgs::msg::String>(topic_prefix + "/param/data_size", 10);
-  range_pub_ = this->create_publisher<std_msgs::msg::Float32>(topic_prefix + "/param/range", 10);
-  gain_pub_ = this->create_publisher<std_msgs::msg::Int32>(topic_prefix + "/param/gain", 10);
-  gamma_pub_ = this->create_publisher<std_msgs::msg::Int32>(topic_prefix + "/param/gamma", 10);
-  ip_address_pub_ = this->create_publisher<std_msgs::msg::String>(topic_prefix + "/param/ip_address", 10);
-  frame_id_pub_ = this->create_publisher<std_msgs::msg::String>(topic_prefix + "/param/frame_id", 10);
-  sonar_model_pub_ = this->create_publisher<std_msgs::msg::String>(topic_prefix + "/param/sonar_model", 10);
+  ping_rate_pub_ = this->create_publisher<std_msgs::msg::Int32>(topic_prefix + "/param/ping_rate", sensor_qos);
+  freq_mode_pub_ = this->create_publisher<std_msgs::msg::Int32>(topic_prefix + "/param/freq_mode", sensor_qos);
+  data_size_pub_ = this->create_publisher<std_msgs::msg::String>(topic_prefix + "/param/data_size", sensor_qos);
+  range_pub_ = this->create_publisher<std_msgs::msg::Float32>(topic_prefix + "/param/range", sensor_qos);
+  gain_pub_ = this->create_publisher<std_msgs::msg::Int32>(topic_prefix + "/param/gain", sensor_qos);
+  gamma_pub_ = this->create_publisher<std_msgs::msg::Int32>(topic_prefix + "/param/gamma", sensor_qos);
+  ip_address_pub_ = this->create_publisher<std_msgs::msg::String>(topic_prefix + "/param/ip_address", sensor_qos);
+  frame_id_pub_ = this->create_publisher<std_msgs::msg::String>(topic_prefix + "/param/frame_id", sensor_qos);
+  sonar_model_pub_ = this->create_publisher<std_msgs::msg::String>(topic_prefix + "/param/sonar_model", sensor_qos);
 
   RCLCPP_INFO(this->get_logger(), "Publishing data with frame = %s", frame_id_.c_str());
 

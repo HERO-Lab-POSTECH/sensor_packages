@@ -277,7 +277,7 @@ def generate_launch_description():
             description='Colormap: jet, hot, viridis, turbo, plasma, magma, inferno, ocean, rainbow, etc.'
         ),
         DeclareLaunchArgument(
-            'qos_reliability', default_value='reliable',
+            'qos_reliability', default_value='best_effort',
             description='QoS reliability for subscriber: reliable or best_effort'
         ),
 

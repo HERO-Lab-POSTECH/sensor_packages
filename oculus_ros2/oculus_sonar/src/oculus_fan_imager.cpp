@@ -27,7 +27,7 @@ void OculusFanImager::init() {
   this->declare_parameter<int>("freq_mode", 2);  // 1=low freq, 2=high freq
   this->declare_parameter<bool>("apply_colormap", true);
   this->declare_parameter<std::string>("colormap", "turbo");  // Default: turbo (perceptually uniform)
-  this->declare_parameter<std::string>("qos_reliability", "reliable");  // reliable or best_effort
+  this->declare_parameter<std::string>("qos_reliability", "best_effort");  // reliable or best_effort
 
   // Get initial parameter values
   input_topic_ = this->get_parameter("input_topic").as_string();
@@ -82,9 +82,8 @@ void OculusFanImager::init() {
     input_topic_, qos,
     std::bind(&OculusFanImager::sonarImageCallback, this, std::placeholders::_1));
 
-  // Create publisher
-  fan_image_pub_ = this->create_publisher<sensor_msgs::msg::Image>(
-    output_topic_, 10);
+  // Create publisher (image_transport: raw + compressed 자동 생성)
+  fan_image_pub_ = image_transport::create_publisher(this, output_topic_, rmw_qos_profile_sensor_data);
 
   // Setup parameter callback for dynamic reconfiguration
   param_callback_handle_ = this->add_on_set_parameters_callback(
@@ -151,7 +150,7 @@ void OculusFanImager::sonarImageCallback(
     out_msg.image = fan_image;
 
     // Publish fan image
-    fan_image_pub_->publish(*out_msg.toImageMsg());
+    fan_image_pub_.publish(*out_msg.toImageMsg());
 
     // Update statistics
     frame_count_++;

@@ -94,13 +94,8 @@ SetParametersResult Ping360Sonar::parametersCallback(const vector<rclcpp::Parame
 
 void Ping360Sonar::initPublishers(bool image, bool scan, bool echo)
 {
-  // Default: RELIABLE QoS with depth 10 for consistent sensor data delivery
-  // Use PING360_PUBLISH_BEST_EFFORT to switch to SensorDataQoS (BEST_EFFORT)
-#ifdef PING360_PUBLISH_BEST_EFFORT
+  // BEST_EFFORT QoS for all sensor data
   const auto qos{rclcpp::SensorDataQoS()};
-#else
-  const auto qos{rclcpp::QoS(10)};  // RELIABLE (ROS2 default)
-#endif
 
   publish_echo = echo;
   publish_image = image;
@@ -118,14 +113,14 @@ void Ping360Sonar::initPublishers(bool image, bool scan, bool echo)
   // Initialize parameter publishers if not already created
   if(gain_pub == nullptr)
   {
-    gain_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/gain", 10);
-    frequency_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/frequency", 10);
-    range_max_pub = create_publisher<std_msgs::msg::Float32>("/sensor/sonar/ping360/param/range_max", 10);
-    angle_sector_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/angle_sector", 10);
-    angle_step_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/angle_step", 10);
-    speed_of_sound_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/speed_of_sound", 10);
-    scan_threshold_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/scan_threshold", 10);
-    image_size_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/image_size", 10);
+    gain_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/gain", qos);
+    frequency_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/frequency", qos);
+    range_max_pub = create_publisher<std_msgs::msg::Float32>("/sensor/sonar/ping360/param/range_max", qos);
+    angle_sector_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/angle_sector", qos);
+    angle_step_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/angle_step", qos);
+    speed_of_sound_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/speed_of_sound", qos);
+    scan_threshold_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/scan_threshold", qos);
+    image_size_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/image_size", qos);
   }
 }
 

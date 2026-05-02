@@ -13,7 +13,7 @@ oculus:
       sonar_model: "m3000d"        # Oculus M3000d (highest frequency model)
 
       # Connection settings
-      ip_address: "192.168.0.202"  # Sonar IP address ("auto" for auto-detect)
+      ip_address: "auto"  # Sonar IP address ("auto" for auto-detect)
       frame_id: "sonar_link"       # Frame ID for published messages
 
       # M3000d typical configuration (high frequency mode)

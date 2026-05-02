@@ -70,6 +70,7 @@ ament_target_dependencies(oculus_driver_component
   rclcpp_components
   std_msgs
   sensor_msgs
+  image_transport
   marine_acoustic_msgs
   apl_msgs
   oculus_sonar_msgs

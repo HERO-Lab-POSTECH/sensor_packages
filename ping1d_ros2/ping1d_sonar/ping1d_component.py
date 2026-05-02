@@ -38,22 +38,22 @@ class Ping1dComponent(Node):
   def __init__(self):
     super().__init__("ping1d_node")
 
-    # Default: RELIABLE QoS with depth 10 for consistent sensor data delivery
-    reliable_qos = QoSProfile(
-        reliability=ReliabilityPolicy.RELIABLE,
+    # BEST_EFFORT QoS with depth 10 for sensor data
+    sensor_qos = QoSProfile(
+        reliability=ReliabilityPolicy.BEST_EFFORT,
         history=HistoryPolicy.KEEP_LAST,
         depth=10
     )
 
-    # Publishers with RELIABLE QoS
-    self.publisher_ = self.create_publisher(Range, "/sensor/sonar/ping1d/range", reliable_qos)
-    self.dist_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/data", reliable_qos)
-    self.speed_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/speed", reliable_qos)
-    self.interval_num_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/interval_num", reliable_qos)
-    self.gain_num_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/gain_num", reliable_qos)
-    self.mode_auto_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/mode_auto", reliable_qos)
-    self.scan_start_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/scan_start", reliable_qos)
-    self.scan_lenght_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/scan_lenght", reliable_qos)
+    # Publishers with BEST_EFFORT QoS
+    self.publisher_ = self.create_publisher(Range, "/sensor/sonar/ping1d/range", sensor_qos)
+    self.dist_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/data", sensor_qos)
+    self.speed_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/speed", sensor_qos)
+    self.interval_num_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/interval_num", sensor_qos)
+    self.gain_num_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/gain_num", sensor_qos)
+    self.mode_auto_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/mode_auto", sensor_qos)
+    self.scan_start_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/scan_start", sensor_qos)
+    self.scan_lenght_pub_ = self.create_publisher(Float32, "/sensor/sonar/ping1d/param/scan_lenght", sensor_qos)
     self.timer_ = self.create_timer(0.1, self.range_callback)
 
     ### Declare ROS 2 Parameter

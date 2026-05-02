@@ -152,7 +152,7 @@ def generate_launch_description():
             description='Output fan image topic (empty = auto from model)'
         ),
         DeclareLaunchArgument(
-            'qos_reliability', default_value='reliable',
+            'qos_reliability', default_value='best_effort',
             description='QoS reliability for subscriber: reliable or best_effort'
         ),
 
