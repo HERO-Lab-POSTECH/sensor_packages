@@ -9,6 +9,7 @@
 
 #include "oculus_sonar/oculus_fan_imager.hpp"
 #include "oculus_sonar/sonar_config.hpp"
+#include <algorithm>
 #include <rclcpp_components/register_node_macro.hpp>
 
 namespace oculus_sonar {
@@ -28,6 +29,8 @@ void OculusFanImager::init() {
   this->declare_parameter<bool>("apply_colormap", true);
   this->declare_parameter<std::string>("colormap", "turbo");  // Default: turbo (perceptually uniform)
   this->declare_parameter<std::string>("qos_reliability", "reliable");  // reliable or best_effort
+  this->declare_parameter<int>("intensity_min", 0);    // Intensity threshold min (0-254)
+  this->declare_parameter<int>("intensity_max", 255);  // Intensity threshold max (1-255)
 
   // Get initial parameter values
   input_topic_ = this->get_parameter("input_topic").as_string();
@@ -36,6 +39,19 @@ void OculusFanImager::init() {
   freq_mode_ = this->get_parameter("freq_mode").as_int();
   apply_colormap_ = this->get_parameter("apply_colormap").as_bool();
   colormap_name_ = this->get_parameter("colormap").as_string();
+  intensity_min_ = this->get_parameter("intensity_min").as_int();
+  intensity_max_ = this->get_parameter("intensity_max").as_int();
+
+  // Validate intensity range
+  intensity_min_ = std::clamp(intensity_min_, 0, 254);
+  intensity_max_ = std::clamp(intensity_max_, 1, 255);
+  if (intensity_min_ >= intensity_max_) {
+    RCLCPP_WARN(this->get_logger(),
+                "intensity_min(%d) >= intensity_max(%d), resetting to [0, 255]",
+                intensity_min_, intensity_max_);
+    intensity_min_ = 0;
+    intensity_max_ = 255;
+  }
 
   // Log startup info
   RCLCPP_INFO(this->get_logger(), "Oculus Fan Imager Node started");
@@ -45,6 +61,7 @@ void OculusFanImager::init() {
   RCLCPP_INFO(this->get_logger(), "  Frequency mode: %d", freq_mode_);
   RCLCPP_INFO(this->get_logger(), "  Apply colormap: %s", apply_colormap_ ? "true" : "false");
   RCLCPP_INFO(this->get_logger(), "  Colormap: %s", colormap_name_.c_str());
+  RCLCPP_INFO(this->get_logger(), "  Intensity range: [%d, %d]", intensity_min_, intensity_max_);
 
   // Log supported models and colormaps
   auto models = SonarConfigRegistry::getSupportedModels();
@@ -135,6 +152,14 @@ void OculusFanImager::sonarImageCallback(
       return;
     }
 
+    // Apply intensity threshold and normalization
+    // Maps [intensity_min_, intensity_max_] → [0, 255], clips outside values
+    if (intensity_min_ > 0 || intensity_max_ < 255) {
+      double alpha = 255.0 / (intensity_max_ - intensity_min_);
+      double beta = -intensity_min_ * alpha;
+      polar_image.convertTo(polar_image, CV_8UC1, alpha, beta);
+    }
+
     // Update mapping with actual bearings from sonar
     // Priority: use azimuth_angles from message (from liboculus)
     polar_converter_->updateMapping(num_ranges, num_beams, max_range,
@@ -196,6 +221,26 @@ rcl_interfaces::msg::SetParametersResult OculusFanImager::parameterCallback(
                    new_colormap.c_str());
         result.successful = false;
         result.reason = "Unknown colormap: " + new_colormap;
+      }
+    }
+    else if (param.get_name() == "intensity_min") {
+      int val = std::clamp(static_cast<int>(param.as_int()), 0, 254);
+      if (val < intensity_max_) {
+        intensity_min_ = val;
+        RCLCPP_INFO(this->get_logger(), "Intensity min changed to %d", intensity_min_);
+      } else {
+        result.successful = false;
+        result.reason = "intensity_min must be < intensity_max";
+      }
+    }
+    else if (param.get_name() == "intensity_max") {
+      int val = std::clamp(static_cast<int>(param.as_int()), 1, 255);
+      if (val > intensity_min_) {
+        intensity_max_ = val;
+        RCLCPP_INFO(this->get_logger(), "Intensity max changed to %d", intensity_max_);
+      } else {
+        result.successful = false;
+        result.reason = "intensity_max must be > intensity_min";
       }
     }
     else if (param.get_name() == "sonar_model") {

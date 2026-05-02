@@ -72,6 +72,8 @@ private:
   int freq_mode_;
   bool apply_colormap_;
   std::string colormap_name_;  // Colormap name (e.g., "viridis", "turbo", "hot")
+  int intensity_min_;           // Intensity threshold min (0-254)
+  int intensity_max_;           // Intensity threshold max (1-255)
 
   // Polar to Cartesian converter
   std::unique_ptr<PolarToCartesianConverter> polar_converter_;
