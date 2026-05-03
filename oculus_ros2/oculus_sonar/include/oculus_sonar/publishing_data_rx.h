@@ -9,6 +9,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <apl_msgs/msg/raw_data.hpp>
+#include <string>
 #include <vector>
 #include "liboculus/DataRx.h"
 
@@ -23,8 +24,10 @@ class PublishingDataRx : public liboculus::DataRx {
   /**
    * @brief Constructor.
    * @param iosrv Shared pointer to IO service context.
+   * @param frame_id Frame ID for message headers.
    */
-  PublishingDataRx(const liboculus::IoServiceThread::IoContextPtr &iosrv);
+  PublishingDataRx(const liboculus::IoServiceThread::IoContextPtr &iosrv,
+                   const std::string &frame_id);
 
   /**
    * @brief Destructor.
@@ -59,6 +62,7 @@ class PublishingDataRx : public liboculus::DataRx {
 private:
   rclcpp::Publisher<apl_msgs::msg::RawData>::SharedPtr raw_data_pub_;
   rclcpp::Clock::SharedPtr clock_;
+  std::string frame_id_;
 };
 
 } // namespace oculus_sonar

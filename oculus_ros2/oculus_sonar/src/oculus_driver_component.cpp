@@ -7,11 +7,13 @@
  * This file implements the OculusDriver class, which provides the main ROS2 component for interfacing with the Oculus sonar device.
  */
 
+#include <algorithm>
 #include <boost/asio.hpp>
 #include "liboculus/Constants.h"
 #include "liboculus/SonarConfiguration.h"
 #include "oculus_sonar/oculus_driver_component.hpp"
 #include "oculus_sonar/publishing_data_rx.h"
+#include "oculus_sonar/sonar_config.hpp"
 
 namespace oculus_sonar {
 
@@ -20,7 +22,6 @@ using liboculus::SimplePingResultV2;
 OculusDriver::OculusDriver(const rclcpp::NodeOptions & options)
   : Node("oculus_driver", options),
     io_srv_(),
-    data_rx_(io_srv_.context()),
     status_rx_(io_srv_.context())
 {
   init();
@@ -36,9 +37,9 @@ void OculusDriver::init() {
   this->declare_parameter<std::string>("ip_address", "auto");
   this->declare_parameter<std::string>("frame_id", "oculus");
   this->declare_parameter<std::string>("sonar_model", "m750d");  // m750d or m1200d
-  this->declare_parameter<double>("range", 2.0);
-  this->declare_parameter<int>("gain", 100);
-  this->declare_parameter<int>("gamma", 200);
+  this->declare_parameter<double>("range", SonarConstants::DEFAULT_RANGE_M);
+  this->declare_parameter<int>("gain",     SonarConstants::DEFAULT_GAIN_PERCENT);
+  this->declare_parameter<int>("gamma",    SonarConstants::DEFAULT_GAMMA);
   this->declare_parameter<int>("ping_rate", 3);
   this->declare_parameter<int>("freq_mode", 2);
   this->declare_parameter<bool>("send_gain", true);
@@ -52,6 +53,8 @@ void OculusDriver::init() {
   ip_address_ = this->get_parameter("ip_address").as_string();
   frame_id_ = this->get_parameter("frame_id").as_string();
   sonar_model_ = this->get_parameter("sonar_model").as_string();
+
+  data_rx_ = std::make_unique<PublishingDataRx>(io_srv_.context(), frame_id_);
   int freq_mode = this->get_parameter("freq_mode").as_int();
 
   // Initialize polar to Cartesian converter with frequency mode
@@ -95,18 +98,18 @@ void OculusDriver::init() {
   // Initialize sonar configuration with current parameters
   updateSonarConfig();
 
-  data_rx_.setRawPublisher(raw_data_pub_);
+  data_rx_->setRawPublisher(raw_data_pub_);
 
-  data_rx_.setCallback<SimplePingResultV1>(std::bind(&OculusDriver::pingCallback<SimplePingResultV1>,
+  data_rx_->setCallback<SimplePingResultV1>(std::bind(&OculusDriver::pingCallback<SimplePingResultV1>,
                                             this, std::placeholders::_1));
 
-  data_rx_.setCallback<SimplePingResultV2>(std::bind(&OculusDriver::pingCallback<SimplePingResultV2>,
+  data_rx_->setCallback<SimplePingResultV2>(std::bind(&OculusDriver::pingCallback<SimplePingResultV2>,
                                             this, std::placeholders::_1));
 
   // When the node connects, start the sonar pinging by sending
   // a OculusSimpleFireMessage current configuration.
-  data_rx_.setOnConnectCallback([&]() {
-    data_rx_.sendSimpleFireMessage(sonar_config_);
+  data_rx_->setOnConnectCallback([&]() {
+    data_rx_->sendSimpleFireMessage(sonar_config_);
   });
 
   // Always setup status callback to check actual sonar model
@@ -118,13 +121,16 @@ void OculusDriver::init() {
     if (!logged) {
       uint16_t part_num = status.msg()->partNumber;
       std::string detected_model = "Unknown";
-      if (part_num == 1032 || part_num == 2419 || part_num == 1434 || part_num == 1921 || part_num == 1244) {
+      auto matches = [](uint16_t pn, const auto& list) {
+        return std::find(list.begin(), list.end(), pn) != list.end();
+      };
+      if (matches(part_num, SonarConstants::M750D_PART_NUMBERS)) {
         detected_model = "M750d variant";
-      } else if (part_num == 1042 || part_num == 2420 || part_num == 1435 || part_num == 2086 || part_num == 1219) {
+      } else if (matches(part_num, SonarConstants::M1200D_PART_NUMBERS)) {
         detected_model = "M1200d variant";
-      } else if (part_num == 1041 || part_num == 2418 || part_num == 1433 || part_num == 2294 || part_num == 1217) {
+      } else if (matches(part_num, SonarConstants::M370S_PART_NUMBERS)) {
         detected_model = "M370s variant (70° FOV!)";
-      } else if (part_num == 2203 || part_num == 2599 || part_num == 2659 || part_num == 2658) {
+      } else if (matches(part_num, SonarConstants::M3000D_PART_NUMBERS)) {
         detected_model = "M3000d variant";
       }
 
@@ -140,8 +146,8 @@ void OculusDriver::init() {
       logged = true;
     }
 
-    if (ip_address_ == "auto" && !data_rx_.isConnected()) {
-      data_rx_.connect(status.ipAddr());
+    if (ip_address_ == "auto" && !data_rx_->isConnected()) {
+      data_rx_->connect(status.ipAddr());
     }
   });
 
@@ -149,7 +155,7 @@ void OculusDriver::init() {
     RCLCPP_INFO(this->get_logger(), "Attempting to auto-detect sonar");
   } else {
     RCLCPP_INFO(this->get_logger(), "Opening sonar at %s", ip_address_.c_str());
-    data_rx_.connect(ip_address_);
+    data_rx_->connect(ip_address_);
   }
 
   io_srv_.start();
@@ -210,22 +216,9 @@ rcl_interfaces::msg::SetParametersResult OculusDriver::parameterCallback(
     }
   }
 
-  RCLCPP_INFO(this->get_logger(), "Setting flags: 0x%s"
-            "\n send range in meters %s"
-            "\n            data size %s"
-            "\n      send gain       %s"
-            "\n      simple return   %s"
-            "\n      gain assistance %s",
-            "",  // hex flags placeholder
-            sonar_config_.getSendRangeAsMeters() ? "true" : "false",
-            liboculus::DataSizeToString(sonar_config_.getDataSize()),
-            sonar_config_.getSendGain() ? "true" : "false",
-            sonar_config_.getSimpleReturn() ? "true" : "false",
-            sonar_config_.getGainAssistance() ? "true" : "false");
-
   // Update the sonar with new params
-  if (data_rx_.isConnected()) {
-    data_rx_.sendSimpleFireMessage(sonar_config_);
+  if (data_rx_->isConnected()) {
+    data_rx_->sendSimpleFireMessage(sonar_config_);
   }
 
   return result;

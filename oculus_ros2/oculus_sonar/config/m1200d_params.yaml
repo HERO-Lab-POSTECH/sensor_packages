@@ -19,7 +19,6 @@ oculus:
       ping_rate: 2                  # 0=Normal, 1=High, 2=Highest, 3=Low, 4=Lowest, 5=Standby
       freq_mode: 2                  # 1=LowFrequency(1.2MHz), 2=HighFrequency(2.1MHz)
       data_size: "8bit"             # "8bit", "16bit", "32bit"
-      num_beams: 1                  # 0=256beams, 1=512beams
 
       # Flags
       send_range_as_meters: true
