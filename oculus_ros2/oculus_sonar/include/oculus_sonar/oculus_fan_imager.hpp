@@ -77,9 +77,6 @@ private:
   // Polar to Cartesian converter
   std::unique_ptr<PolarToCartesianConverter> polar_converter_;
 
-  // OpenCV bridge
-  cv_bridge::CvImagePtr cv_ptr_;
-
   // Parameter callback handle
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr param_callback_handle_;
 
