@@ -32,7 +32,6 @@ Driver Parameters (empty = use config file):
   ping_rate       Ping rate (0=Normal, 1=High, 2=Highest, 3=Low, 4=Lowest)
   freq_mode       Frequency mode (1=low, 2=high)
   data_size       Data size [8bit, 16bit, 32bit]
-  num_beams       Number of beams (0=256, 1=512)
 
 Fan Imager Parameters:
   apply_colormap  Apply colormap [true/false] (default: true)
@@ -151,10 +150,6 @@ def launch_setup(context, *args, **kwargs):
     if data_size:
         param_overrides['data_size'] = data_size
 
-    num_beams = LaunchConfiguration('num_beams').perform(context)
-    if num_beams:
-        param_overrides['num_beams'] = int(num_beams)
-
     # Fan imager parameters
     apply_colormap = LaunchConfiguration('apply_colormap').perform(context)
     colormap = LaunchConfiguration('colormap').perform(context)
@@ -261,10 +256,6 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'data_size', default_value='',
             description='Data size: 8bit, 16bit, 32bit (empty = use config)'
-        ),
-        DeclareLaunchArgument(
-            'num_beams', default_value='',
-            description='Number of beams: 0=256, 1=512 (empty = use config)'
         ),
 
         # Fan imager parameters

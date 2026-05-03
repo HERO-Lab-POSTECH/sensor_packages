@@ -22,6 +22,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `src/oculus_driver_component.cpp` 깨진 hex log 블록 (`"0x%s"` 포맷에 빈 placeholder만 전달, 13줄).
 - `include/oculus_sonar/oculus_fan_imager.hpp:81` `cv_bridge::CvImagePtr cv_ptr_` 미사용 멤버 (선언만 있고 read/write 0건). cv_bridge 라이브러리 자체는 다른 사용(`cv_bridge::CvImage`, `cv_bridge::Exception`)이 있어 include 유지.
 - `config/m750d_params.yaml`, `config/m1200d_params.yaml`, `config/m3000d_params.yaml` — `num_beams` 키 (driver line 49 주석에 "무시됨" 명시).
+- `launch/oculus.launch.py` — `num_beams` `DeclareLaunchArgument` + `param_overrides` 분기 + 헤더 docstring 행. yaml 키 제거에 따른 잔존물 정리 (CLI override 시 미선언 파라미터 reject 방지).
+- `README.md:46` — `num_beams` 표 행 (yaml/launch 양쪽에서 제거됨).
 
 ### Fixed
 - `src/publishing_data_rx.cpp:41` — `frame_id` 하드코딩(`"oculus"`) 제거 → 생성자 주입으로 `OculusDriver`의 `frame_id_` 파라미터 반영. `PublishingDataRx` 생성자 시그니처에 `const std::string &frame_id` 추가.

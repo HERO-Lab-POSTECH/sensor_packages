@@ -43,7 +43,6 @@ ros2 launch oculus_sonar oculus.launch.py sonar_model:=m3000d with_fan:=true col
 | `ping_rate` | from yaml | 0=Normal, 1=High, 2=Highest, 3=Low, 4=Lowest |
 | `freq_mode` | from yaml | 1=low, 2=high |
 | `data_size` | from yaml | `8bit` / `16bit` / `32bit` |
-| `num_beams` | from yaml | 0=256 beams, 1=512 beams |
 | `apply_colormap` | `true` | Fan imager: apply colormap |
 | `colormap` | `turbo` | Fan imager colormap (jet, viridis, plasma, …) |
 | `qos_reliability` | `best_effort` | Fan imager subscriber QoS (`reliable` / `best_effort`) |
