@@ -42,7 +42,7 @@ marine_acoustic_msgs::msg::SonarImage pingToSonarImage(
   const int num_ranges = ping.ping()->nRanges;
   const int bearing_count = ping.bearings().size();
 
-  RCLCPP_INFO(rclcpp::get_logger("ping_to_sonar_image"),
+  RCLCPP_INFO_ONCE(rclcpp::get_logger("ping_to_sonar_image"),
               "num_bearings: %d, bearing_count: %d, num_ranges: %d, range_resolution: %.4fm, max_range: %.2fm",
               num_bearings, bearing_count, num_ranges, ping.ping()->rangeResolution,
               num_ranges * ping.ping()->rangeResolution);
