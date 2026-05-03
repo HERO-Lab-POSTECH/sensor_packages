@@ -216,19 +216,6 @@ rcl_interfaces::msg::SetParametersResult OculusDriver::parameterCallback(
     }
   }
 
-  RCLCPP_INFO(this->get_logger(), "Setting flags: 0x%s"
-            "\n send range in meters %s"
-            "\n            data size %s"
-            "\n      send gain       %s"
-            "\n      simple return   %s"
-            "\n      gain assistance %s",
-            "",  // hex flags placeholder
-            sonar_config_.getSendRangeAsMeters() ? "true" : "false",
-            liboculus::DataSizeToString(sonar_config_.getDataSize()),
-            sonar_config_.getSendGain() ? "true" : "false",
-            sonar_config_.getSimpleReturn() ? "true" : "false",
-            sonar_config_.getGainAssistance() ? "true" : "false");
-
   // Update the sonar with new params
   if (data_rx_->isConnected()) {
     data_rx_->sendSimpleFireMessage(sonar_config_);
