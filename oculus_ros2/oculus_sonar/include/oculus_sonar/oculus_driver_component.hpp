@@ -129,7 +129,7 @@ class OculusDriver : public rclcpp::Node {
   sensor_msgs::msg::Image sonarToImage(const marine_acoustic_msgs::msg::SonarImage& sonar_msg);
 
   liboculus::IoServiceThread io_srv_;
-  PublishingDataRx data_rx_;
+  std::unique_ptr<PublishingDataRx> data_rx_;
   liboculus::StatusRx status_rx_;
 
   rclcpp::Publisher<marine_acoustic_msgs::msg::SonarImage>::SharedPtr imaging_sonar_pub_;

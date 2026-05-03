@@ -22,7 +22,6 @@ using liboculus::SimplePingResultV2;
 OculusDriver::OculusDriver(const rclcpp::NodeOptions & options)
   : Node("oculus_driver", options),
     io_srv_(),
-    data_rx_(io_srv_.context()),
     status_rx_(io_srv_.context())
 {
   init();
@@ -54,6 +53,8 @@ void OculusDriver::init() {
   ip_address_ = this->get_parameter("ip_address").as_string();
   frame_id_ = this->get_parameter("frame_id").as_string();
   sonar_model_ = this->get_parameter("sonar_model").as_string();
+
+  data_rx_ = std::make_unique<PublishingDataRx>(io_srv_.context(), frame_id_);
   int freq_mode = this->get_parameter("freq_mode").as_int();
 
   // Initialize polar to Cartesian converter with frequency mode
@@ -97,18 +98,18 @@ void OculusDriver::init() {
   // Initialize sonar configuration with current parameters
   updateSonarConfig();
 
-  data_rx_.setRawPublisher(raw_data_pub_);
+  data_rx_->setRawPublisher(raw_data_pub_);
 
-  data_rx_.setCallback<SimplePingResultV1>(std::bind(&OculusDriver::pingCallback<SimplePingResultV1>,
+  data_rx_->setCallback<SimplePingResultV1>(std::bind(&OculusDriver::pingCallback<SimplePingResultV1>,
                                             this, std::placeholders::_1));
 
-  data_rx_.setCallback<SimplePingResultV2>(std::bind(&OculusDriver::pingCallback<SimplePingResultV2>,
+  data_rx_->setCallback<SimplePingResultV2>(std::bind(&OculusDriver::pingCallback<SimplePingResultV2>,
                                             this, std::placeholders::_1));
 
   // When the node connects, start the sonar pinging by sending
   // a OculusSimpleFireMessage current configuration.
-  data_rx_.setOnConnectCallback([&]() {
-    data_rx_.sendSimpleFireMessage(sonar_config_);
+  data_rx_->setOnConnectCallback([&]() {
+    data_rx_->sendSimpleFireMessage(sonar_config_);
   });
 
   // Always setup status callback to check actual sonar model
@@ -145,8 +146,8 @@ void OculusDriver::init() {
       logged = true;
     }
 
-    if (ip_address_ == "auto" && !data_rx_.isConnected()) {
-      data_rx_.connect(status.ipAddr());
+    if (ip_address_ == "auto" && !data_rx_->isConnected()) {
+      data_rx_->connect(status.ipAddr());
     }
   });
 
@@ -154,7 +155,7 @@ void OculusDriver::init() {
     RCLCPP_INFO(this->get_logger(), "Attempting to auto-detect sonar");
   } else {
     RCLCPP_INFO(this->get_logger(), "Opening sonar at %s", ip_address_.c_str());
-    data_rx_.connect(ip_address_);
+    data_rx_->connect(ip_address_);
   }
 
   io_srv_.start();
@@ -229,8 +230,8 @@ rcl_interfaces::msg::SetParametersResult OculusDriver::parameterCallback(
             sonar_config_.getGainAssistance() ? "true" : "false");
 
   // Update the sonar with new params
-  if (data_rx_.isConnected()) {
-    data_rx_.sendSimpleFireMessage(sonar_config_);
+  if (data_rx_->isConnected()) {
+    data_rx_->sendSimpleFireMessage(sonar_config_);
   }
 
   return result;
