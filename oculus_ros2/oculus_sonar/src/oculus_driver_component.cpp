@@ -7,11 +7,13 @@
  * This file implements the OculusDriver class, which provides the main ROS2 component for interfacing with the Oculus sonar device.
  */
 
+#include <algorithm>
 #include <boost/asio.hpp>
 #include "liboculus/Constants.h"
 #include "liboculus/SonarConfiguration.h"
 #include "oculus_sonar/oculus_driver_component.hpp"
 #include "oculus_sonar/publishing_data_rx.h"
+#include "oculus_sonar/sonar_config.hpp"
 
 namespace oculus_sonar {
 
@@ -36,9 +38,9 @@ void OculusDriver::init() {
   this->declare_parameter<std::string>("ip_address", "auto");
   this->declare_parameter<std::string>("frame_id", "oculus");
   this->declare_parameter<std::string>("sonar_model", "m750d");  // m750d or m1200d
-  this->declare_parameter<double>("range", 2.0);
-  this->declare_parameter<int>("gain", 100);
-  this->declare_parameter<int>("gamma", 200);
+  this->declare_parameter<double>("range", SonarConstants::DEFAULT_RANGE_M);
+  this->declare_parameter<int>("gain",     SonarConstants::DEFAULT_GAIN_PERCENT);
+  this->declare_parameter<int>("gamma",    SonarConstants::DEFAULT_GAMMA);
   this->declare_parameter<int>("ping_rate", 3);
   this->declare_parameter<int>("freq_mode", 2);
   this->declare_parameter<bool>("send_gain", true);
@@ -118,13 +120,16 @@ void OculusDriver::init() {
     if (!logged) {
       uint16_t part_num = status.msg()->partNumber;
       std::string detected_model = "Unknown";
-      if (part_num == 1032 || part_num == 2419 || part_num == 1434 || part_num == 1921 || part_num == 1244) {
+      auto matches = [](uint16_t pn, const auto& list) {
+        return std::find(list.begin(), list.end(), pn) != list.end();
+      };
+      if (matches(part_num, SonarConstants::M750D_PART_NUMBERS)) {
         detected_model = "M750d variant";
-      } else if (part_num == 1042 || part_num == 2420 || part_num == 1435 || part_num == 2086 || part_num == 1219) {
+      } else if (matches(part_num, SonarConstants::M1200D_PART_NUMBERS)) {
         detected_model = "M1200d variant";
-      } else if (part_num == 1041 || part_num == 2418 || part_num == 1433 || part_num == 2294 || part_num == 1217) {
+      } else if (matches(part_num, SonarConstants::M370S_PART_NUMBERS)) {
         detected_model = "M370s variant (70° FOV!)";
-      } else if (part_num == 2203 || part_num == 2599 || part_num == 2659 || part_num == 2658) {
+      } else if (matches(part_num, SonarConstants::M3000D_PART_NUMBERS)) {
         detected_model = "M3000d variant";
       }
 

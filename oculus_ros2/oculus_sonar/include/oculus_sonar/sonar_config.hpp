@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <array>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -38,6 +39,19 @@ namespace SonarConstants {
     // Frequency mode identifiers
     constexpr int FREQ_MODE_LOW = 1;
     constexpr int FREQ_MODE_HIGH = 2;
+
+    // Hardware Part Number identifiers (from observed devices)
+    // Used to detect actual hardware vs configured model
+    constexpr std::array<uint16_t, 5> M750D_PART_NUMBERS  = {1032, 2419, 1434, 1921, 1244};
+    constexpr std::array<uint16_t, 5> M1200D_PART_NUMBERS = {1042, 2420, 1435, 2086, 1219};
+    constexpr std::array<uint16_t, 5> M370S_PART_NUMBERS  = {1041, 2418, 1433, 2294, 1217};
+    constexpr std::array<uint16_t, 4> M3000D_PART_NUMBERS = {2203, 2599, 2659, 2658};
+
+    // Default network configuration
+    constexpr const char* DEFAULT_SONAR_IP = "192.168.0.200";
+    constexpr int DEFAULT_GAIN_PERCENT = 100;
+    constexpr int DEFAULT_GAMMA = 200;
+    constexpr double DEFAULT_RANGE_M = 2.0;
 }
 
 //==============================================================================
