@@ -179,6 +179,7 @@ if(BUILD_TESTING)
     target_include_directories(test_ping_to_sonar_image PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/include
       ${CMAKE_CURRENT_SOURCE_DIR}/../liboculus/include
+      ${CMAKE_CURRENT_SOURCE_DIR}/../liboculus/thirdparty
     )
     ament_target_dependencies(test_ping_to_sonar_image
       rclcpp
