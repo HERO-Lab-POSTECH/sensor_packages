@@ -4,6 +4,36 @@ All notable changes to `oculus_sonar` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased] — Phase B-2: Launch helper extraction (refactor)
+
+> Master design: `docs/superpowers/specs/2026-05-03-oculus-sonar-refactor-design.md` §8 B-2
+> Plan: `docs/superpowers/plans/2026-05-04-oculus-sonar-phase-b-2-launch-helper.md`
+> Verification: structural snapshot regression PASS + functional --show-args + with_fan path
+
+### Changed
+- `launch/oculus.launch.py` 323 LOC → 120 LOC. `launch_setup` body delegates container assembly to `_oculus_common.make_sonar_container`. Override-collection logic moved to two file-private helpers (`_collect_driver_overrides`, `_collect_fan_imager_overrides`) since they need `LaunchConfiguration` access.
+- 90-line module docstring → 4-line pointer to README. 46-line trailing comment block deleted (duplicate of Phase A README content).
+
+### Added
+- `launch/_oculus_common.py` (105 LOC) — 3 pure helpers (no LaunchConfiguration access, unit-testable):
+  - `sonar_model_to_config_path(model: str) -> str` — config YAML resolution + model whitelist FileNotFoundError
+  - `topic_namespace(model: str) -> str` — `/sensor/sonar/oculus/{model}` prefix
+  - `make_sonar_container(model, with_fan, driver_overrides, fan_imager_overrides) -> ComposableNodeContainer`
+
+### Verification
+- colcon build PASS (Release)
+- **Layer 1 — structural snapshot**: baseline (`adc79cc` post-B-1 main HEAD) vs candidate (B-2 final) — 4 snapshot files byte-identical
+  - `ros2 component types` → unchanged (still 2 oculus_sonar components)
+  - `ros2 param dump /oculus/m750d` → all parameter defaults unchanged
+  - `ros2 topic list` + `topic info --verbose` → all topic names · message types · QoS unchanged
+- **Layer 2 — functional sanity**: `ros2 launch --show-args` returns 12 args (sonar_model, with_fan, ip_address, range, gain, gamma, ping_rate, freq_mode, data_size, apply_colormap, colormap, qos_reliability); `with_fan:=true` actual launch runs 10s without crash and publishes both `/sensor/sonar/oculus/m750d/sonar` AND `/sensor/sonar/oculus/m750d/fan_image`
+
+### Notes
+- Helper module location is INSIDE `oculus_sonar/launch/` (not a cross-package `sensor_packages/launch_utils/`). When ping360_sonar refactor introduces a second consumer with overlapping helper needs, that's the trigger to revisit cross-package extraction. Until then, the underscore-prefix internal-only convention keeps coupling minimal.
+- `_collect_driver_overrides` and `_collect_fan_imager_overrides` deliberately stay in the launch file (not in `_oculus_common.py`) because they call `LaunchConfiguration(...).perform(context)` — keeping them in the file means `_oculus_common` remains pure and unit-testable without a launch context.
+- Phase B-1's `scripts/regression_oculus.sh` reused unchanged. Per spec §10 the regression infra cost amortizes across B-1, B-2, and C.
+- Regression script DDS discovery race (B-1 implementer hit STARTUP_WAIT_S=10 manual workaround) recurred in B-2. Resolved with `export ROS_DOMAIN_ID=99` BEFORE sourcing ROS + `STARTUP_WAIT_S=12` + isolated domain (avoids cross-talk with stray `ros2 bag play --loop` on default domain 0). Documented in memory `reference_oculus_regression_dds_gotcha.md`.
+
 ## [Unreleased] — Phase B-1: OculusDriver 4-way split + regression infra (refactor)
 
 > Master design: `docs/superpowers/specs/2026-05-03-oculus-sonar-refactor-design.md` §8 B-1
