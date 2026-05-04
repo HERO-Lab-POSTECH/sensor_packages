@@ -166,16 +166,30 @@ ament_export_dependencies(
 ament_export_include_directories(include)
 ament_export_libraries(oculus_driver_component oculus_fan_imager_component)
 
-# Testing
-#if(BUILD_TESTING)
-#  find_package(ament_lint_auto REQUIRED)
-#  ament_lint_auto_find_test_dependencies()
-#  
-#  find_package(ament_cmake_gtest REQUIRED)
-#  ament_add_gtest(oculus_sonar_test test/unit/main.cpp)
-#  if(TARGET oculus_sonar_test)
-#    target_link_libraries(oculus_sonar_test oculus_driver_component)
-#  endif()
-#endif()
+# Testing — Phase C-1 onwards.
+# First gtest in oculus_sonar; tests byte-exact equivalence of
+# pingToSonarImage refactor against frozen-old implementation.
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+
+  ament_add_gtest(test_ping_to_sonar_image
+    test/test_ping_to_sonar_image.cpp
+  )
+  if(TARGET test_ping_to_sonar_image)
+    target_include_directories(test_ping_to_sonar_image PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/include
+      ${CMAKE_CURRENT_SOURCE_DIR}/../liboculus/include
+    )
+    ament_target_dependencies(test_ping_to_sonar_image
+      rclcpp
+      marine_acoustic_msgs
+      liboculus
+    )
+    target_link_libraries(test_ping_to_sonar_image
+      ${liboculus_LIBRARIES}
+      g3log
+    )
+  endif()
+endif()
 
 ament_package()
