@@ -4,7 +4,7 @@
 #
 # Captures 4 externally-observable snapshots of the running driver:
 #   1. component types  (ros2 component types | grep oculus_sonar)
-#   2. param dump       (ros2 param dump /oculus_driver after launch)
+#   2. param dump       (ros2 param dump /oculus/<model> after launch)
 #   3. topic list       (ros2 topic list, filtered by /sensor/sonar/oculus/)
 #   4. topic info       (ros2 topic info --verbose, per topic — type + QoS)
 #
@@ -43,7 +43,8 @@ cleanup_processes() {
     sleep 2
     [[ -n "${launch_pid}" ]] && pkill -P "${launch_pid}" 2>/dev/null || true
     sleep 1
-    pkill -f oculus_driver 2>/dev/null || true
+    # Match the launch's container process (per oculus.launch.py: oculus_<model>_container)
+    pkill -f "oculus_${SONAR_MODEL}_container" 2>/dev/null || true
 }
 
 # Stable sort filter that strips ANSI codes and timestamp prefixes that ros2
@@ -73,16 +74,18 @@ run_snapshot() {
     sleep "${STARTUP_WAIT_S}"
 
     # Verify the node is alive (connection failure to sonar is OK; node failure is not)
-    if ! ros2 node list 2>/dev/null | grep -q oculus_driver; then
-        echo "[${label}] ERROR: oculus_driver node did not start — see ${label_dir}/launch.log"
+    # Per oculus.launch.py: namespace='oculus', name=sonar_model → /oculus/<model>
+    local node_path="/oculus/${SONAR_MODEL}"
+    if ! ros2 node list 2>/dev/null | grep -qx "${node_path}"; then
+        echo "[${label}] ERROR: ${node_path} node did not start — see ${label_dir}/launch.log"
         cleanup_processes "${launch_pid}"
         return 1
     fi
 
     # Snapshot 2: param dump (sorted YAML for stable diff)
-    ros2 param dump /oculus_driver --print 2>/dev/null | sanitize \
+    ros2 param dump "${node_path}" --print 2>/dev/null | sanitize \
         > "${label_dir}/02_param_dump.yaml" || {
-        echo "[${label}] ERROR: param dump failed"
+        echo "[${label}] ERROR: param dump failed for ${node_path}"
         cleanup_processes "${launch_pid}"
         return 1
     }
@@ -155,7 +158,7 @@ case "${mode}" in
         echo ""
         echo "What this captures (4 snapshots):"
         echo "  01_component_types.txt — ros2 component types output (registration)"
-        echo "  02_param_dump.yaml      — ros2 param dump /oculus_driver (defaults)"
+        echo "  02_param_dump.yaml      — ros2 param dump /oculus/<model> (defaults)"
         echo "  03_topic_list.txt       — advertised topics under /sensor/sonar/oculus/<model>/"
         echo "  04_topic_info.txt       — per-topic message type and QoS profile"
         exit 2
