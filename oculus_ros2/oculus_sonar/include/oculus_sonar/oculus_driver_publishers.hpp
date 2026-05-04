@@ -66,8 +66,6 @@ class OculusDriverPublishers {
     }
     oculus_meta_pub_->publish(meta);
 
-    publishParameters();
-
     const auto t_end = std::chrono::steady_clock::now();
     const double latency_ms =
         std::chrono::duration<double, std::milli>(t_end - t_start).count();

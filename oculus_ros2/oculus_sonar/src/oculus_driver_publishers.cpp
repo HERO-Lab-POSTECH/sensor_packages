@@ -55,6 +55,10 @@ void OculusDriverPublishers::initialize() {
       [this]() { publishParameters(); });
 }
 
+void OculusDriverPublishers::republishParameters() {
+  publishParameters();
+}
+
 void OculusDriverPublishers::publishParameters() {
   std_msgs::msg::Int32 ping_rate_msg;
   ping_rate_msg.data = node_->get_parameter("ping_rate").as_int();
