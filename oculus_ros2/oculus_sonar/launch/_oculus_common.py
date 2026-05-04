@@ -8,6 +8,8 @@ resolving launch arguments via .perform(context).
 """
 
 import os
+from typing import Optional, Union
+
 from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
@@ -46,7 +48,7 @@ def make_sonar_container(
     driver_overrides: dict,
     fan_imager_overrides: dict,
     *,
-    container_name: str = None,
+    container_name: Optional[str] = None,
 ) -> ComposableNodeContainer:
     """Build the ComposableNodeContainer holding the OculusDriver and
     (optionally) the OculusFanImager.
@@ -65,7 +67,7 @@ def make_sonar_container(
     """
     config_file = sonar_model_to_config_path(model)
 
-    driver_params = [config_file]
+    driver_params: list[Union[str, dict]] = [config_file]
     if driver_overrides:
         driver_params.append(driver_overrides)
 
