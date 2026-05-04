@@ -41,6 +41,9 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 # Component library (replaces nodelet)
 add_library(oculus_driver_component SHARED
   src/oculus_driver_component.cpp
+  src/oculus_driver_config.cpp
+  src/oculus_driver_publishers.cpp
+  src/oculus_connection_manager.cpp
   src/publishing_data_rx.cpp
 )
 
@@ -101,16 +104,9 @@ target_link_libraries(oculus_fan_imager_component
   ${OpenCV_LIBRARIES}
 )
 
-# Register components (replaces nodelet plugin)
-rclcpp_components_register_nodes(oculus_driver_component
-  "oculus_sonar::OculusDriver"
-)
-
-rclcpp_components_register_nodes(oculus_fan_imager_component
-  "oculus_sonar::OculusFanImager"
-)
-
-# Optional: create standalone executable too
+# Register components — register_node creates both the plugin entry
+# AND a standalone executable. Earlier versions also called
+# register_nodes which led to duplicate registration; removed in Phase B-1.
 rclcpp_components_register_node(oculus_driver_component
   PLUGIN "oculus_sonar::OculusDriver"
   EXECUTABLE oculus_driver_node

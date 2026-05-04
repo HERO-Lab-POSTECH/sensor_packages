@@ -4,6 +4,38 @@ All notable changes to `oculus_sonar` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased] — Phase B-1: OculusDriver 4-way split + regression infra (refactor)
+
+> Master design: `docs/superpowers/specs/2026-05-03-oculus-sonar-refactor-design.md` §8 B-1
+> Plan: `docs/superpowers/plans/2026-05-04-oculus-sonar-phase-b-1-driver-split.md`
+> Verification: structural snapshot regression (4 dimensions, hardware-free) — PASS
+
+### Changed
+- `src/oculus_driver_component.cpp` 395 → 105 LOC (orchestrator only — wires 3 helpers; status callback inline lambda 36 LOC가 init() 본문에 남아있어 plan 목표 ~80 LOC 초과)
+- `include/oculus_sonar/oculus_driver_component.hpp` 161 → 73 LOC
+- `CMakeLists.txt` — `register_nodes` 호출 2개 제거 (`register_node`만 유지). 컴포넌트 중복 노출 해소 (Phase A spec §7 A-3 미완 흡수, D1)
+
+### Added
+- `include/oculus_sonar/oculus_driver_config.hpp` + `src/oculus_driver_config.cpp` (70+167 LOC) — 11 declare_parameter, parameterCallback, 3 setter helper, updateSonarConfig, convertDataSizeString. `rclcpp::Node*` non-owning 참조 (D2: 독립 helper)
+- `include/oculus_sonar/oculus_driver_publishers.hpp` + `src/oculus_driver_publishers.cpp` (90+110 LOC) — 4 sensor + 9 param echo publisher, `publishParameters()`, `sonarToImage()` 헬퍼, 템플릿 `publishPing<PingT>`
+- `include/oculus_sonar/oculus_connection_manager.hpp` + `src/oculus_connection_manager.cpp` (69+77 LOC) — `IoServiceThread`, `PublishingDataRx`, `StatusRx`, ping/status 콜백 디스패치, 연결 lifecycle
+- `scripts/regression_oculus.sh` — 4 차원 구조적 snapshot 회귀 인프라 (component types / param dump / topic list / per-topic info), B-2/C 재사용 자산
+
+### Verification
+- colcon build PASS (Release)
+- **Layer 1 — structural snapshot**: baseline (`80b2c5e` main HEAD, post-D1 적용) vs candidate (B-1 final) — 4개 snapshot 파일 모두 byte-identical
+  - `ros2 component types | grep oculus` → 각 노드 1회씩만 노출 (D1 적용 후, 이전 2회 → 1회)
+  - `ros2 param dump /oculus/m750d` → 모든 parameter 동일 default
+  - `ros2 topic list | grep oculus` + `ros2 topic info --verbose` → 모든 publisher 토픽 이름·메시지 타입·QoS 동일
+- **Layer 2 — driver longevity smoke test**: UCRC m750d bag (`/workspace/data/7_ucrc_watertank/.../m750d-range15-tilt45-v1`) 60s 병행 재생 → driver process alive + launch.log에 SIGSEGV/`what():`/`std::terminate`/`boost::asio` error 0건
+
+### Notes
+- 본 PR은 byte-exact ping output 검증을 포함하지 않음. 드라이버는 `liboculus`를 통해 UDP 소켓 raw bytes를 받으므로 ROS bag을 driver INTO 재생할 방법이 없음. Hardware-in-loop 검증은 별도 라운드 (Phase C 또는 운용 검증).
+- Longevity smoke test는 structural snapshot이 못 잡는 runtime crash 종류(io_service thread race, callback dispatch SEGV, double-stop)를 잡기 위한 두 번째 회귀 layer. UCRC bag을 사용한 이유는 sonar_3d_reconstruction Phase B-1 회귀와 같은 디렉토리 패밀리라서 미래 cross-comparison에 유리하기 때문.
+- `init()` 함수 자체는 70 LOC (PKRC ≤50 한도 초과). status callback inline lambda(36 LOC)가 init() 본문에 위치한 결과. lambda 헬퍼 추출은 Phase B-2 또는 별도 patch 후보.
+- Phase B-2 (launch helper 추출)는 본 PR 머지 후 `refactor/phase-b2-launch-helper` 브랜치에서 진행. B-1의 회귀 인프라(`scripts/regression_oculus.sh`)를 그대로 재사용.
+- 잔존 리스크 3건 (Phase A에서 이월) 중 #2 (CMakeLists `liboculus` include path INSTALL_INTERFACE 미포함)은 본 PR과 무관, Phase B-2 또는 별도 patch에서 처리.
+
 ## [Unreleased] — Phase A: oculus_sonar cleanup (refactor)
 
 ### Changed
