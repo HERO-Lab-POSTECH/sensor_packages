@@ -69,6 +69,16 @@ class ImageData {
   uint16_t nRanges() const { return _numRanges; }
   uint16_t nBeams() const { return _numBeams; }
 
+  // Zero-copy raw byte access (Phase C-1).
+  // data() may return nullptr — caller must check.
+  // Storage: row-major [rangeBin][beam], element_size = _dataSize.
+  // Row r occupies bytes [r * stride() + offset(),
+  //                       r * stride() + offset() + nBeams() * _dataSize).
+  const uint8_t *data() const noexcept { return _data; }
+  size_t stride() const noexcept { return _stride; }
+  size_t offset() const noexcept { return _offset; }
+  uint32_t numBytes() const noexcept { return _imageSize; }
+
   uint8_t at_uint8(unsigned int beam, unsigned int rangeBin) const {
     CHECK(_dataSize == 1)
         << "This function can only handle 8-bit data, use at_uint16()";
