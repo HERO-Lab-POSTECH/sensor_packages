@@ -4,6 +4,56 @@ All notable changes to `oculus_sonar` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased] — Phase C-2: parameter echo throttle + latched QoS (refactor)
+
+### Changed
+- `OculusDriverPublishers::initialize()` — 9 `/param/*` publishers now use
+  `rclcpp::QoS(1).transient_local()` (RELIABLE + TRANSIENT_LOCAL +
+  KEEP_LAST(1)) instead of `SensorDataQoS`. Late-joining subscribers
+  receive the most recent value via DDS replay.
+- `OculusDriverPublishers::publishPing<>()` — removed `publishParameters()`
+  call. Per-ping wasted work for 9 std_msgs publishers eliminated.
+- `OculusDriver::init()` — `on_change` listener now also calls
+  `publishers_->republishParameters()` so parameter updates land in
+  the latched cache within ~1 ms of the parameter service callback.
+
+### Added
+- `OculusDriverPublishers::republishParameters()` — public wrapper around
+  the existing private `publishParameters()` for use by the
+  `OculusDriverConfig::on_change` listener.
+- `OculusDriverPublishers::param_publish_timer_` — `wall_timer(1s)` member
+  that drives steady-state `publishParameters()` invocations at ~1 Hz.
+
+### Verification
+- colcon build PASS (Release + BUILD_TESTING=ON, clean rebuild)
+- 8/8 existing C-1 gtest fixtures PASS (no algorithm regression)
+- Structural snapshot diff: only `04_topic_info.txt` differs, only on the
+  9 `/param/*` topics, only the expected `Reliability QoS` flip
+  (`BEST_EFFORT → RELIABLE`) and `Durability QoS` flip
+  (`VOLATILE → TRANSIENT_LOCAL`). Other 3 dimensions byte-identical.
+- `ros2 topic hz /sensor/sonar/oculus/m750d/param/range` over 30 s:
+  average ≈ 1.0 Hz (acceptance: 0.95–1.05).
+- `ros2 topic echo --once /sensor/sonar/oculus/m750d/param/range`:
+  returns immediately on freshly launched node (latched seed PASS).
+
+### Performance (measurement-only, no gate)
+- Throughput model: m3000d 30 Hz × 9 publishers = 270 msg/s →
+  steady-state 9 msg/s (97% reduction).
+- C-1 instrumentation `[c1-perf] pings=N window=W p50=Xms p99=Yms`
+  automatically captures the publishPing latency reduction once
+  hardware is available. Bag-replay does not exercise publishPing.
+
+### Notes
+- No new gtest fixtures. `wall_timer` is a deterministic ROS 2 primitive;
+  the structural snapshot already detects QoS regressions.
+- Downstream compatibility: only `3d_mapper_node.py`
+  (`/sensor/sonar/.../param/range`) was found subscribing to oculus
+  param topics. Its VOLATILE durability and dynamic reliability are
+  compatible with the new TRANSIENT_LOCAL + RELIABLE publisher.
+- Single-threaded executor assumption preserved. If `MultiThreadedExecutor`
+  is adopted later, `publishParameters` will need a mutex to serialize
+  the timer callback, the on_change listener, and the seed call.
+
 ## [Unreleased] — Phase C-1: pingToSonarImage zero-copy refactor (refactor)
 
 > Master design: `docs/superpowers/specs/2026-05-03-oculus-sonar-refactor-design.md` §9 C-1
