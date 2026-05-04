@@ -23,15 +23,10 @@
 #include <std_msgs/msg/string.hpp>
 #include <image_transport/image_transport.hpp>
 
-#include "liboculus/SimplePingResult.h"
-#include "liboculus/StatusRx.h"
-#include "liboculus/IoServiceThread.h"
-#include "liboculus/SonarConfiguration.h"
-
-#include "oculus_sonar/publishing_data_rx.h"
 #include "oculus_sonar/ping_to_sonar_image.hpp"
 #include "oculus_sonar/oculus_driver_config.hpp"
 #include "oculus_sonar/oculus_driver_publishers.hpp"
+#include "oculus_sonar/oculus_connection_manager.hpp"
 #include "marine_acoustic_msgs/msg/sonar_image.hpp"
 #include "oculus_sonar_msgs/msg/oculus_metadata.hpp"
 #include "apl_msgs/msg/raw_data.hpp"
@@ -71,12 +66,9 @@ class OculusDriver : public rclcpp::Node {
    */
   void init();
 
-  liboculus::IoServiceThread io_srv_;
-  std::unique_ptr<PublishingDataRx> data_rx_;
-  liboculus::StatusRx status_rx_;
-
   std::unique_ptr<OculusDriverConfig> config_;
   std::unique_ptr<OculusDriverPublishers> publishers_;
+  std::unique_ptr<OculusConnectionManager> connection_;
 };
 
 }  // namespace oculus_sonar
