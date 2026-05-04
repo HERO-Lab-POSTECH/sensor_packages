@@ -82,13 +82,16 @@ def make_sonar_container(
     ]
 
     if with_fan:
+        fan_params: list[Union[str, dict]] = [config_file]
+        if fan_imager_overrides:
+            fan_params.append(fan_imager_overrides)
         composable_nodes.append(
             ComposableNode(
                 package='oculus_sonar',
                 plugin='oculus_sonar::OculusFanImager',
                 name='fan_imager',
                 namespace='oculus',
-                parameters=[config_file, fan_imager_overrides],
+                parameters=fan_params,
             )
         )
 
