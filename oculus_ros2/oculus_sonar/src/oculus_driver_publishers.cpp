@@ -14,6 +14,7 @@ OculusDriverPublishers::OculusDriverPublishers(rclcpp::Node* node,
 
 void OculusDriverPublishers::initialize() {
   auto sensor_qos = rclcpp::SensorDataQoS();
+  auto latched_qos = rclcpp::QoS(1).transient_local();
 
   imaging_sonar_pub_ = node_->create_publisher<marine_acoustic_msgs::msg::SonarImage>(
       topic_prefix_ + "/sonar", sensor_qos);
@@ -25,25 +26,33 @@ void OculusDriverPublishers::initialize() {
       node_, topic_prefix_ + "/image", rmw_qos_profile_sensor_data);
 
   ping_rate_pub_ = node_->create_publisher<std_msgs::msg::Int32>(
-      topic_prefix_ + "/param/ping_rate", sensor_qos);
+      topic_prefix_ + "/param/ping_rate", latched_qos);
   freq_mode_pub_ = node_->create_publisher<std_msgs::msg::Int32>(
-      topic_prefix_ + "/param/freq_mode", sensor_qos);
+      topic_prefix_ + "/param/freq_mode", latched_qos);
   data_size_pub_ = node_->create_publisher<std_msgs::msg::String>(
-      topic_prefix_ + "/param/data_size", sensor_qos);
+      topic_prefix_ + "/param/data_size", latched_qos);
   range_pub_ = node_->create_publisher<std_msgs::msg::Float32>(
-      topic_prefix_ + "/param/range", sensor_qos);
+      topic_prefix_ + "/param/range", latched_qos);
   gain_pub_ = node_->create_publisher<std_msgs::msg::Int32>(
-      topic_prefix_ + "/param/gain", sensor_qos);
+      topic_prefix_ + "/param/gain", latched_qos);
   gamma_pub_ = node_->create_publisher<std_msgs::msg::Int32>(
-      topic_prefix_ + "/param/gamma", sensor_qos);
+      topic_prefix_ + "/param/gamma", latched_qos);
   ip_address_pub_ = node_->create_publisher<std_msgs::msg::String>(
-      topic_prefix_ + "/param/ip_address", sensor_qos);
+      topic_prefix_ + "/param/ip_address", latched_qos);
   frame_id_pub_ = node_->create_publisher<std_msgs::msg::String>(
-      topic_prefix_ + "/param/frame_id", sensor_qos);
+      topic_prefix_ + "/param/frame_id", latched_qos);
   sonar_model_pub_ = node_->create_publisher<std_msgs::msg::String>(
-      topic_prefix_ + "/param/sonar_model", sensor_qos);
+      topic_prefix_ + "/param/sonar_model", latched_qos);
 
   RCLCPP_INFO(node_->get_logger(), "Publishing data with frame = %s", frame_id_.c_str());
+
+  // Seed the TRANSIENT_LOCAL durability cache so subscribers connecting
+  // before the first timer tick still receive a value via late-join replay.
+  publishParameters();
+
+  param_publish_timer_ = node_->create_wall_timer(
+      std::chrono::seconds(1),
+      [this]() { publishParameters(); });
 }
 
 void OculusDriverPublishers::publishParameters() {
