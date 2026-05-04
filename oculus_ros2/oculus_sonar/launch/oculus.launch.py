@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-"""
-oculus.launch.py — Unified ROS2 launch entry point for all Oculus sonar models.
+"""Unified ROS2 launch entry point for all Oculus sonar models.
 
-See `oculus_sonar/README.md` for the full argument table, examples, and topic
-list. This file declares launch arguments and delegates container assembly to
-helpers in `_oculus_common.py`.
+Declares launch arguments; delegates container assembly to `_oculus_common.py`.
+See `oculus_sonar/README.md` for the full argument table.
 """
 
 import os
