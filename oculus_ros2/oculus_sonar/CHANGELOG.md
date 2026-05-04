@@ -4,6 +4,35 @@ All notable changes to `oculus_sonar` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased] — Phase C-1: pingToSonarImage zero-copy refactor (refactor)
+
+> Master design: `docs/superpowers/specs/2026-05-03-oculus-sonar-refactor-design.md` §9 C-1
+> Spec: `docs/superpowers/specs/2026-05-04-oculus-sonar-phase-c-1-zero-copy-design.md`
+> Plan: `docs/superpowers/plans/2026-05-04-oculus-sonar-phase-c-1-zero-copy.md`
+> Verification: 8 byte-exact gtest fixtures + 4-dimension structural snapshot regression — PASS
+
+### Changed
+- `oculus_ros2/liboculus/include/liboculus/ImageData.h` — add 4 public `const noexcept` accessors (`data()`, `stride()`, `offset()`, `numBytes()`). Vendored library; no external `.git` (full edit rights confirmed).
+- `oculus_ros2/oculus_sonar/include/oculus_sonar/ping_to_sonar_image.hpp` — replace per-element `push_back` hot loop (lines 126-143, 18 LOC) with branch-hoisted `memcpy` path (~22 LOC). Two paths: fast (single memcpy when stride==row_bytes), stride (row-by-row memcpy when gain prefix present). 3-way `if (dataSize == 1/2/4)` branch removed — little-endian byte storage matches `is_bigendian=false` output.
+- `oculus_ros2/oculus_sonar/include/oculus_sonar/oculus_driver_publishers.hpp` + `oculus_driver_publishers.cpp` — `publishPing` instrumented with `chrono::steady_clock` p50/p99 sliding-window stats. `RCLCPP_INFO_THROTTLE(1000ms, ...)` keeps log overhead negligible.
+- `oculus_ros2/oculus_sonar/CMakeLists.txt` — replace stale commented-out test block with working `ament_add_gtest` block targeting `test/test_ping_to_sonar_image.cpp`. First gtest in `oculus_sonar` package.
+
+### Added
+- `oculus_ros2/oculus_sonar/test/test_ping_to_sonar_image.cpp` (~270 LOC) — 8 byte-exact gtest fixtures: 3 fast-path × element size (1/2/4 bytes) + 3 stride-path × element size + 2 edge cases (zero ranges, zero beams). Frozen pre-C-1 implementation embedded inline as golden reference. Synthetic ping helper builds `OculusSimplePingResult` buffer with deterministic byte pattern.
+
+### Verification
+- colcon build PASS (Release, BUILD_TESTING=ON)
+- **Layer 1 — colcon test**: 8/8 gtest fixtures PASS against current production code (proves byte-for-byte equivalence to pre-refactor implementation)
+- **Layer 3 — structural snapshot**: baseline (pre-C-1, `4a8bca4`) vs candidate (post-refactor, `60e027c`) — 4 snapshot files (`01_component_types.txt`, `02_param_dump.yaml`, `03_topic_list.txt`, `04_topic_info.txt`) all byte-identical
+- **Layer 4 — performance** (data-collection, NOT a fail gate per spec §7): instrumentation deployed; field measurements deferred to hardware availability
+
+### Notes
+- Performance measurement requires real sonar hardware (UDP input — bag-replay impossible). When hardware is available, run with `m3000d` at 30Hz for highest amplification target. Baseline comparison should use B-1 head (`adc79cc`) build, candidate should use C-1 head, both measured under identical conditions (same bag run / same target), 60s sample, 3 repetitions. Record p50/p99/CPU% in PR description.
+- Phase C-2 (parameter echo throttle + latched QoS) gets a separate brainstorm round after C-1 merge. The C-1 instrumentation infrastructure in `publishPing` will inform how C-2 measures publisher load.
+- Carry-forward (post-merge polish, non-blocking): (1) sort-every-ping in `recordLatencyAndLog` could move into throttle branch to reduce measurement perturbation; (2) thread-safety of `latency_window_` is single-threaded-executor assumed — comment to be added if MultiThreadedExecutor adoption planned.
+- This is the FIRST PR that modifies vendored `liboculus`. CMakeLists.txt of `liboculus` does not need touching — header-only addition. Confirmed only `oculus_sonar` consumes `liboculus` headers in this workspace.
+- Regression DDS gotcha: `regression_oculus.sh` requires `export ROS_DOMAIN_ID=99` BEFORE `source ROS` + `STARTUP_WAIT_S=12-15`. Same workaround as B-2 (memory `reference_oculus_regression_dds_gotcha.md`).
+
 ## [Unreleased] — Phase B-2: Launch helper extraction (refactor)
 
 > Master design: `docs/superpowers/specs/2026-05-03-oculus-sonar-refactor-design.md` §8 B-2
