@@ -5,8 +5,11 @@
  */
 #pragma once
 
+#include <algorithm>
+#include <chrono>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <apl_msgs/msg/raw_data.hpp>
 #include <image_transport/image_transport.hpp>
@@ -42,8 +45,12 @@ class OculusDriverPublishers {
   }
 
   // Templated entry: publishes sonar/image/metadata + parameter echoes.
+  // Phase C-1: chrono-based latency instrumentation around the conversion +
+  // publish path. Sliding window of last 100 samples; logs p50/p99 every 1s.
   template <typename PingT>
   void publishPing(const PingT& ping) {
+    const auto t_start = std::chrono::steady_clock::now();
+
     auto sonar_msg = pingToSonarImage(ping);
     sonar_msg.header.stamp = node_->get_clock()->now();
     sonar_msg.header.frame_id = frame_id_;
@@ -60,12 +67,25 @@ class OculusDriverPublishers {
     oculus_meta_pub_->publish(meta);
 
     publishParameters();
+
+    const auto t_end = std::chrono::steady_clock::now();
+    const double latency_ms =
+        std::chrono::duration<double, std::milli>(t_end - t_start).count();
+    recordLatencyAndLog(latency_ms);
   }
 
  private:
   void publishParameters();
   sensor_msgs::msg::Image sonarToImage(
       const marine_acoustic_msgs::msg::SonarImage& sonar_msg) const;
+
+  // Phase C-1: ping callback latency stats (sliding window p50/p99).
+  void recordLatencyAndLog(double latency_ms);
+
+  static constexpr size_t kLatencyWindow = 100;
+  std::vector<double> latency_window_;     // sliding window, last N samples
+  size_t latency_write_idx_ = 0;           // ring index
+  uint64_t total_pings_ = 0;               // monotonic ping count
 
   rclcpp::Node* node_;  // non-owning
   std::string topic_prefix_;

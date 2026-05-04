@@ -107,4 +107,25 @@ sensor_msgs::msg::Image OculusDriverPublishers::sonarToImage(
   return image_msg;
 }
 
+void OculusDriverPublishers::recordLatencyAndLog(double latency_ms) {
+  if (latency_window_.size() < kLatencyWindow) {
+    latency_window_.push_back(latency_ms);
+  } else {
+    latency_window_[latency_write_idx_] = latency_ms;
+    latency_write_idx_ = (latency_write_idx_ + 1) % kLatencyWindow;
+  }
+  ++total_pings_;
+
+  std::vector<double> sorted = latency_window_;
+  std::sort(sorted.begin(), sorted.end());
+  const size_t n = sorted.size();
+  const double p50 = sorted[n / 2];
+  const double p99 = sorted[(n * 99) / 100];
+
+  RCLCPP_INFO_THROTTLE(
+      node_->get_logger(), *node_->get_clock(), 1000,
+      "[c1-perf] pings=%lu  window=%zu  p50=%.3fms  p99=%.3fms",
+      static_cast<unsigned long>(total_pings_), n, p50, p99);
+}
+
 }  // namespace oculus_sonar
