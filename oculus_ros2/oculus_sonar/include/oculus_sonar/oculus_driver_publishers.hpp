@@ -66,13 +66,17 @@ class OculusDriverPublishers {
     }
     oculus_meta_pub_->publish(meta);
 
-    publishParameters();
-
     const auto t_end = std::chrono::steady_clock::now();
     const double latency_ms =
         std::chrono::duration<double, std::milli>(t_end - t_start).count();
     recordLatencyAndLog(latency_ms);
   }
+
+  // Publishes all 9 parameter echoes once. Called by:
+  //   1) wall_timer (steady-state ~1 Hz),
+  //   2) on_change listener after a parameter update (immediate latch update),
+  //   3) initialize() (latched seed for late-join subscribers).
+  void republishParameters();
 
  private:
   void publishParameters();
@@ -95,6 +99,8 @@ class OculusDriverPublishers {
   rclcpp::Publisher<oculus_sonar_msgs::msg::OculusMetadata>::SharedPtr oculus_meta_pub_;
   rclcpp::Publisher<apl_msgs::msg::RawData>::SharedPtr raw_data_pub_;
   image_transport::Publisher image_pub_;
+
+  rclcpp::TimerBase::SharedPtr param_publish_timer_;
 
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr ping_rate_pub_;
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr freq_mode_pub_;
