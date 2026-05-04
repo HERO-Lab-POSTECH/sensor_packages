@@ -94,6 +94,7 @@ void OculusDriver::init() {
     if (connection_->isConnected()) {
       connection_->sendSimpleFireMessage(new_config);
     }
+    publishers_->republishParameters();
   });
 
   connection_->start();
