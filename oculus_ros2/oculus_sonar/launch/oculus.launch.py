@@ -17,7 +17,7 @@ from launch.substitutions import LaunchConfiguration
 # Make sibling _oculus_common importable when this file is executed by ros2 launch
 # (ros2 launch sets __file__ to the install/share/.../launch/ path).
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
-from _oculus_common import make_sonar_container, topic_namespace  # noqa: E402
+from _oculus_common import make_sonar_container, topic_namespace  # type: ignore[import-not-found]  # noqa: E402
 
 
 def _collect_driver_overrides(context) -> dict:
@@ -69,7 +69,7 @@ def _collect_fan_imager_overrides(context, model: str) -> dict:
     return overrides
 
 
-def launch_setup(context, *args, **kwargs):
+def launch_setup(context, *_args, **_kwargs):
     model = LaunchConfiguration('sonar_model').perform(context)
     with_fan = LaunchConfiguration('with_fan').perform(context).lower() == 'true'
 
