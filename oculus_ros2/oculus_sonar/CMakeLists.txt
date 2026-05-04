@@ -41,6 +41,7 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 # Component library (replaces nodelet)
 add_library(oculus_driver_component SHARED
   src/oculus_driver_component.cpp
+  src/oculus_driver_config.cpp
   src/publishing_data_rx.cpp
 )
 
