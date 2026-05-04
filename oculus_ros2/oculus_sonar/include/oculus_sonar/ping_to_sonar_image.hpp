@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <cstring>  // std::memcpy (Phase C-1 zero-copy hot path)
 #include <rclcpp/rclcpp.hpp>
 #include "marine_acoustic_msgs/msg/sonar_image.hpp"
 #include "liboculus/SimplePingResult.h"
@@ -123,22 +124,32 @@ marine_acoustic_msgs::msg::SonarImage pingToSonarImage(
   sonar_image.is_bigendian = false;
   sonar_image.data_size = ping.dataSize();
 
-  for (unsigned int r = 0; r < num_ranges; r++) {
-    for (unsigned int b = 0; b < num_bearings; b++) {
-      if (ping.dataSize() == 1) {
-        const uint8_t data = ping.image().at_uint8(b, r);
-        sonar_image.intensities.push_back(data & 0xFF);
-      } else if (ping.dataSize() == 2) {
-        const uint16_t data = ping.image().at_uint16(b, r);
-        sonar_image.intensities.push_back(data & 0xFF);
-        sonar_image.intensities.push_back((data & 0xFF00) >> 8);
-      } else if (ping.dataSize() == 4) {
-        const uint32_t data = ping.image().at_uint32(b, r);
-        sonar_image.intensities.push_back(data & 0x000000FF);
-        sonar_image.intensities.push_back((data & 0x0000FF00) >> 8);
-        sonar_image.intensities.push_back((data & 0x00FF0000) >> 16);
-        sonar_image.intensities.push_back((data & 0xFF000000) >> 24);
-      }
+  // Phase C-1 zero-copy hot path. Replaces the per-element push_back loop
+  // (3-way dataSize branch × N×M iterations) with branch-hoisted memcpy.
+  // Little-endian storage matches is_bigendian=false output, so no shifts.
+  const auto& img = ping.image();
+  const size_t element_size = ping.dataSize();
+  const size_t row_bytes = static_cast<size_t>(num_bearings) * element_size;
+  const size_t total_bytes = static_cast<size_t>(num_ranges) * row_bytes;
+
+  if (img.data() == nullptr || total_bytes == 0) {
+    sonar_image.intensities.clear();
+    return sonar_image;
+  }
+
+  sonar_image.intensities.resize(total_bytes);
+  const uint8_t* src = img.data() + img.offset();
+  uint8_t* dst = sonar_image.intensities.data();
+
+  if (img.stride() == row_bytes) {
+    // Fast path: rows are contiguous → single memcpy.
+    std::memcpy(dst, src, total_bytes);
+  } else {
+    // Stride path: gain prefix or padding per row → row-by-row memcpy.
+    const size_t stride = img.stride();
+    const size_t n_rows = static_cast<size_t>(num_ranges);
+    for (size_t r = 0; r < n_rows; ++r) {
+      std::memcpy(dst + r * row_bytes, src + r * stride, row_bytes);
     }
   }
 
