@@ -4,6 +4,16 @@ All notable changes to `oculus_sonar` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased] — Phase P4a: QoS helper module (refactor)
+
+### Added
+- `include/oculus_sonar/qos.hpp` — workspace QoS 3-tier helper (SENSOR/RELIABLE/LATCHED) per spec §2.4
+
+### Verification
+- colcon build PASS
+
+---
+
 ## [Unreleased] — Phase P3: TF naming standard (refactor)
 
 ### Changed
