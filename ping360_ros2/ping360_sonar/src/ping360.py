@@ -67,7 +67,7 @@ class Ping360_node(Node):
                 
         # init messages
         self.sector = Sector()
-        frame = self.declare_parameter("frame", "sonar").value
+        frame = self.declare_parameter("frame", "ping360_link").value
         self.image = Image()
         self.image.header.frame_id = frame
         self.image.encoding = 'mono8'

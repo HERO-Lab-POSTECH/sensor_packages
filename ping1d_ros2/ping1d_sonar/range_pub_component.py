@@ -32,11 +32,13 @@ class RangePublisher(Node):
         # Use sensor QoS for consistency across packages (BEST_EFFORT, KEEP_LAST)
         self.publisher_ = self.create_publisher(Range, "/sensor/sonar/ping1d/range", qos_profile_sensor_data)
         self.timer_ = self.create_timer(1.0, self.publish_range)
+        self.declare_parameter('frame_id', 'ping1d_link')
+        self.frame_id: str = self.get_parameter('frame_id').value
 
     def publish_range(self):
         range_msg = Range()
         range_msg.header.stamp = self.get_clock().now().to_msg()
-        range_msg.header.frame_id = "range_sensor"
+        range_msg.header.frame_id = self.frame_id
         range_msg.radiation_type = Range.ULTRASOUND
         range_msg.field_of_view = 0.1
         range_msg.min_range = 0.2

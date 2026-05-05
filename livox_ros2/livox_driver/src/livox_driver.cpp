@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
   int data_src = kSourceRawLidar;
   double publish_freq  = 10.0; /* Hz */
   int output_type      = kOutputToRos;
-  std::string frame_id = "livox_frame";
+  std::string frame_id = "livox_link";
   bool lidar_bag = true;
   bool imu_bag   = false;
 

@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] — Phase P3: TF naming standard (refactor)
+
+### Changed
+- Default frame_id `livox_frame` → `livox_link` (REP-105 + Autoware)
+  - `livox_driver/src/livox_driver.cpp`
+  - `livox_driver/src/lddc.cpp` (imu_msg)
+  - `livox_driver/launch_ROS2/{rviz_,msg_}{MID360,HAP}_launch.py` + `rviz_mixed.py`
+
+### Notes
+- ROS1 launch files (`launch_ROS1/`) and `.rviz` config files not changed — ROS1 scope.
+- boat_description URDF provides legacy `livox_frame` alias for old bag compatibility.
+
+### Verification
+- colcon build PASS
+
 ## [1.2.4]
 ### Fixed
 - Optimize framing performance

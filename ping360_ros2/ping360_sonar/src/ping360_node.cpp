@@ -30,7 +30,7 @@ Ping360Sonar::Ping360Sonar(rclcpp::NodeOptions options)
   publish_echo = declareParamDescription("publish_echo", false, "Publish raw echo on '/sensor/sonar/ping360/echo'");
 
   // constant initialization
-  const auto frame{declareParamDescription<string>("frame", "sonar", "Frame ID of the message headers")};
+  const auto frame{declareParamDescription<string>("frame", "ping360_link", "Frame ID of the message headers")};
   image.header.set__frame_id(frame);
   image.set__encoding("mono8");
   image.set__is_bigendian(0);
