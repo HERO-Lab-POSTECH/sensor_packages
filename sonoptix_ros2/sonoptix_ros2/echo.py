@@ -62,7 +62,7 @@ class EchoNode(Node):
             'tx_mode': ['auto', str],
             'power_state': [True, bool],
             'topic': ['/sensor/sonar/sonoptix/data', str],
-            'frame_id': ['echo', str],
+            'frame_id': ['sonoptix_link', str],
         }
 
         for param, [value, dtype] in params.items():

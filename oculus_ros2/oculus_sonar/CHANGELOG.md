@@ -4,6 +4,15 @@ All notable changes to `oculus_sonar` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased] — Phase P3: TF naming standard (refactor)
+
+### Changed
+- Driver default `frame_id`: `"oculus"` → `"sonar_link"` (`src/oculus_driver_config.cpp`)
+- yaml config files (`config/m750d_params.yaml`, `m1200d_params.yaml`, `m3000d_params.yaml`) already consistent with `"sonar_link"` — no change.
+
+### Verification
+- colcon build PASS
+
 ## [Unreleased] — Phase C-2: parameter echo throttle + latched QoS (refactor)
 
 ### Changed

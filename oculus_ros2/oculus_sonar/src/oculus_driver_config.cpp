@@ -15,7 +15,7 @@ OculusDriverConfig::OculusDriverConfig(rclcpp::Node* node) : node_(node) {}
 
 void OculusDriverConfig::initialize() {
   node_->declare_parameter<std::string>("ip_address", "auto");
-  node_->declare_parameter<std::string>("frame_id", "oculus");
+  node_->declare_parameter<std::string>("frame_id", "sonar_link");
   node_->declare_parameter<std::string>("sonar_model", "m750d");
   node_->declare_parameter<double>("range", SonarConstants::DEFAULT_RANGE_M);
   node_->declare_parameter<int>("gain", SonarConstants::DEFAULT_GAIN_PERCENT);
