@@ -4,6 +4,18 @@ All notable changes to `ping1d_sonar` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased] — Phase P5a: Launch arg standardization (refactor)
+
+### Changed
+- `ping_sonar.launch.py`: 헤더 docstring 표준 적용 (spec §2.5.3)
+- `ping_sonar.launch.py`: dead imports 정리 (`IfCondition`, `PathJoinSubstitution`, `FindPackageShare`, `packages_name`)
+
+### Verification
+- colcon build PASS
+- ros2 launch --show-args: 8 args 표시
+
+---
+
 ## [Unreleased] — Phase P4a: QoS helper module (refactor)
 
 ### Added
