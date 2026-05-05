@@ -1,8 +1,24 @@
+"""
+Ping360 mechanical scanning sonar driver launch (cpp or python node).
+
+Arguments:
+  node_type        : Node implementation: cpp or python        (default: cpp)
+  device           : Serial device path                        (default: '/dev/ping360')
+  baudrate         : Serial baudrate                           (default: 115200)
+  connection_type  : Connection type: serial or udp            (default: udp)
+  udp_address      : UDP address (only for udp connection)     (default: '192.168.0.202')
+  udp_port         : UDP port (only for udp connection)        (default: 12345)
+
+Examples:
+  ros2 launch ping360_sonar ping360.launch.py
+  ros2 launch ping360_sonar ping360.launch.py node_type:=python connection_type:=serial
+"""
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-import os
+
 
 def launch_setup(context, *args, **kwargs):
     node_type = LaunchConfiguration('node_type').perform(context)

@@ -1,8 +1,28 @@
 #!/usr/bin/env python3
-"""Unified ROS2 launch entry point for all Oculus sonar models.
+"""
+Unified ROS2 launch entry point for all Oculus sonar models.
 
-Declares launch arguments; delegates container assembly to `_oculus_common.py`.
-See `oculus_sonar/README.md` for the full argument table.
+Arguments:
+  sonar_model    : Sonar model: m750d, m1200d, m3000d          (default: 'm750d')
+  with_fan       : Launch fan_imager visualization node        (default: false)
+  ip_address     : Oculus sonar IP (empty = config default)    (default: '')
+  range          : Range override in meters                    (default: '')
+  gain           : Gain override (0-100)                       (default: '')
+  gamma          : Gamma override (0-255)                      (default: '')
+  ping_rate      : Ping rate override (Hz, 0-40)               (default: '')
+  freq_mode      : Frequency mode override                     (default: '')
+  data_size      : Data size override                          (default: '')
+  apply_colormap : Apply colormap to fan image                 (default: true)
+  colormap       : Colormap name (jet, hot, viridis, turbo...) (default: 'turbo')
+  qos_reliability: Fan imager subscriber QoS reliability       (default: 'best_effort')
+
+Empty string ('') for an override means "fall back to YAML config default".
+Container assembly is delegated to `_oculus_common.py`.
+
+Examples:
+  ros2 launch oculus_sonar oculus.launch.py
+  ros2 launch oculus_sonar oculus.launch.py sonar_model:=m1200d with_fan:=true
+  ros2 launch oculus_sonar oculus.launch.py range:=20 gain:=50
 """
 
 import os

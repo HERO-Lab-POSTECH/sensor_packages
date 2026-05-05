@@ -4,6 +4,18 @@ All notable changes to `oculus_sonar` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased] — Phase P5a: Launch arg standardization (refactor)
+
+### Changed
+- `oculus.launch.py`: 헤더 docstring 표준 적용 (spec §2.5.3) — 12 launch args 모두 명시
+  - `qos_reliability` arg 유지 (oculus_fan_imager.cpp의 subscriber QoS 노드 파라미터로 사용 중 — spec §2.4 helper 적용은 후속 phase)
+
+### Verification
+- colcon build PASS
+- ros2 launch --show-args: 12 args 표시
+
+---
+
 ## [Unreleased] — Phase P4a: QoS helper module (refactor)
 
 ### Added

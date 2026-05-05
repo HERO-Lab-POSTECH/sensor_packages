@@ -1,15 +1,29 @@
+"""
+Ping1D single-beam altitude sonar driver launch.
+
+Arguments:
+  device         : Serial device path                          (default: '/dev/ttyUSB0')
+  speed_of_sound : Speed of sound in mm/s                      (default: 1450000)
+  interval       : Ping interval in ms (50-200)                (default: 100)
+  gain           : Gain setting (0-6)                          (default: 1)
+  scan_start     : Scan start distance in mm (30-200)          (default: 100)
+  scan_length    : Scan length in mm (2000-10000)              (default: 3000)
+  mode_auto      : Auto mode: 0=manual, 1=auto                 (default: 0)
+  use_rviz       : Launch RViz for visualization               (default: true)
+
+Examples:
+  ros2 launch ping1d_sonar ping_sonar.launch.py
+  ros2 launch ping1d_sonar ping_sonar.launch.py device:=/dev/ping1d use_rviz:=false
+"""
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration
 
 from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-
-    packages_name = "ping1d_sonar"
 
     ping1d_node = Node(
         package='ping1d_sonar',
