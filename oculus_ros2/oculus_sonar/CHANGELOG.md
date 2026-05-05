@@ -2,6 +2,18 @@
 
 All notable changes to `oculus_sonar` will be documented in this file.
 
+## [Unreleased] — Phase P6: Config structure (refactor)
+
+### Changed
+- 3 config yaml (m750d/m1200d/m3000d_params.yaml): 헤더 docstring + 카테고리 separator + [Static]/[Dynamic] 태그 + 단위 표기 (spec §2.7)
+- 카테고리 분리: MODEL / NETWORK + FRAMES / IMAGING / FLAGS
+
+### Verification
+- yaml.safe_load PASS (3 파일)
+- colcon build PASS (cosmetic 변경 — 값 변경 0건)
+
+---
+
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased] — Phase P5a: Launch arg standardization (refactor)

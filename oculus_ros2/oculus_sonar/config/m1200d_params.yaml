@@ -1,26 +1,38 @@
-# m1200d_params.yaml
-# Date: 251125
-# Description: ROS2 parameter configuration for Oculus M1200d sonar
+# ============================================================================
+# Oculus M1200D parameters
+# ============================================================================
+# Parameter Types:
+#   [Static]  - Read-only, requires node restart
+#   [Dynamic] - Can be changed at runtime via ros2 param set
+# ============================================================================
 
 oculus:
   m1200d:
     ros__parameters:
-      # Model specific
+      # ======================================================================
+      # MODEL [Static]
+      # ======================================================================
       sonar_model: "m1200d"        # Oculus M1200d
 
-      # Connection settings
+      # ======================================================================
+      # NETWORK + FRAMES [Static]
+      # ======================================================================
       ip_address: "192.168.0.201"  # Sonar IP address ("auto" for auto-detect)
-      frame_id: "sonar_link"       # Frame ID for published messages (matches boat_description URDF)
+      frame_id: "sonar_link"       # Frame ID (matches boat_description URDF)
 
-      # M1200d typical configuration
-      range: 10.0                   # Range (meters), M1200d: 0.1-40m
-      gain: 100                     # Gain (percentage), valid: 1-100
-      gamma: 200                    # Gamma correction, valid: 0-255
-      ping_rate: 2                  # 0=Normal, 1=High, 2=Highest, 3=Low, 4=Lowest, 5=Standby
-      freq_mode: 2                  # 1=LowFrequency(1.2MHz), 2=HighFrequency(2.1MHz)
-      data_size: "8bit"             # "8bit", "16bit", "32bit"
+      # ======================================================================
+      # IMAGING [Dynamic — runtime changeable via ros2 param set]
+      # ======================================================================
+      range: 10.0                  # [m] [Dynamic] M1200d: 0.1-40m
+      gain: 100                    # [%] [Dynamic] valid: 1-100
+      gamma: 200                   # [Dynamic] gamma correction, 0-255
+      ping_rate: 2                 # [Dynamic] 0=Normal,1=High,2=Highest,3=Low,4=Lowest,5=Standby
+      freq_mode: 2                 # [Dynamic] 1=LowFrequency(1.2MHz), 2=HighFrequency(2.1MHz)
+      data_size: "8bit"            # [Dynamic] "8bit","16bit","32bit"
 
-      # Flags
+      # ======================================================================
+      # FLAGS [Static]
+      # ======================================================================
       send_range_as_meters: true
       send_gain: true
       send_simple_return: true
