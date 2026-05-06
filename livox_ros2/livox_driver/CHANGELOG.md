@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] — Pre-experiment Fix H-6 (fix)
+
+### Added
+- `livox_ros2/livox_driver/package.xml` — declare `<depend>livox_sdk</depend>` so colcon parallel builds livox_sdk before livox_driver. Without this, `find_library(LIVOX_LIDAR_SDK_LIBRARY)` fails on clean checkout. Cherry-picked from humble-devel `8dc03f6`.
+
+### Changed
+- `livox_ros2/livox_driver/.gitignore` — un-ignore `package.xml`.
+
+### Verification
+- `colcon build --packages-up-to livox_driver` PASS from clean state (livox_sdk built first in 0.07s, livox_driver in 7.80s).
+
+---
+
 ## [Unreleased] — Phase P4a: QoS helper module (refactor)
 
 ### Added
