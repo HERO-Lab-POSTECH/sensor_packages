@@ -42,8 +42,10 @@ Ping360Sonar::Ping360Sonar(rclcpp::NodeOptions options)
   configureFromParams();
 
   const auto image_rate_ms{get_parameter("image_rate").as_int()};
-  image_timer = this->create_wall_timer(std::chrono::milliseconds(image_rate_ms),
-                                        [this](){publishImage();});
+  image_timer = rclcpp::create_timer(this, this->get_clock(),
+                                     rclcpp::Duration::from_nanoseconds(
+                                         static_cast<int64_t>(image_rate_ms) * 1000000LL),
+                                     [this](){publishImage();});
 
   param_change = add_on_set_parameters_callback(
                    std::bind(&Ping360Sonar::parametersCallback, this, std::placeholders::_1));

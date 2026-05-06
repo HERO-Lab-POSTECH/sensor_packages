@@ -43,6 +43,8 @@ from std_msgs.msg import Int32, String, Bool
 
 import requests
 
+from sonoptix_ros2.qos import SENSOR_QOS
+
 
 class EchoNode(Node):
     """
@@ -79,8 +81,6 @@ class EchoNode(Node):
                 qos.QoSPolicyKind.RELIABILITY,
                 )
         )
-        SENSOR_QOS = rclpy.qos.qos_profile_sensor_data
-
         # Handle parameter updates
         self.param_handler_ptr_ = self.add_on_set_parameters_callback(
             self.set_param_callback)

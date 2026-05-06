@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] — Post-Audit Fix PR-M (fix, 6th audit)
+
+### Fixed
+- `lddc.{h,cpp}`: IMU `header.frame_id` no longer hardcoded to `"livox_link"`. `Lddc` ctor now accepts an optional `imu_frame_id`; when empty, falls back to the existing `frame_id` so the default behavior is unchanged (High, 6th audit).
+- `livox_driver.cpp`: declares new `imu_frame_id` parameter (default `""` → fallback to `frame_id`) and passes it to `Lddc`.
+
+### Changed
+- `launch_ROS2/{msg,rviz}_{MID360,HAP}_launch.py` + `rviz_mixed.py` (5 files): expose `imu_frame_id` parameter (empty default → fallback to `frame_id`).
+
+### Verification
+- colcon build PASS (livox_driver)
+
 ## [Unreleased] — Pre-experiment Fix H-6 (fix)
 
 ### Added

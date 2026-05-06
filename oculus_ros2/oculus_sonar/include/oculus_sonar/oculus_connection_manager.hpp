@@ -31,7 +31,8 @@ class OculusConnectionManager {
 
   OculusConnectionManager(const std::string& ip_address,
                           const std::string& frame_id,
-                          rclcpp::Logger logger);
+                          rclcpp::Logger logger,
+                          rclcpp::Clock::SharedPtr clock);
   ~OculusConnectionManager();
 
   OculusConnectionManager(const OculusConnectionManager&) = delete;

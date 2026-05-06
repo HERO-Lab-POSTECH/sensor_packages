@@ -50,8 +50,9 @@ void OculusDriverPublishers::initialize() {
   // before the first timer tick still receive a value via late-join replay.
   publishParameters();
 
-  param_publish_timer_ = node_->create_wall_timer(
-      std::chrono::seconds(1),
+  param_publish_timer_ = rclcpp::create_timer(
+      node_, node_->get_clock(),
+      rclcpp::Duration::from_seconds(1.0),
       [this]() { publishParameters(); });
 }
 

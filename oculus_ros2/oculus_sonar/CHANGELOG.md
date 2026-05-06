@@ -2,6 +2,16 @@
 
 All notable changes to `oculus_sonar` will be documented in this file.
 
+## [2.0.1] — Post-Audit Fix PR-M (fix, 6th audit)
+
+### Fixed
+- `publishing_data_rx.{h,cpp}`: PublishingDataRx now takes a `rclcpp::Clock::SharedPtr` from the owning node instead of constructing its own `RCL_SYSTEM_TIME` clock. `~/raw_data` `header.stamp` now honors `use_sim_time` during bag replay (Critical, 6th audit).
+- `oculus_connection_manager.{hpp,cpp}` + `oculus_driver_component.cpp`: clock plumbed from `OculusDriver::get_clock()` through ConnectionManager to PublishingDataRx.
+- `oculus_driver_publishers.cpp`: param-publish 1 Hz timer migrated from `create_wall_timer` to `rclcpp::create_timer(node, get_clock(), ...)` so `/param/*` republish honors sim time (High, 6th audit).
+
+### Verification
+- colcon build PASS (oculus_sonar)
+
 ## [Unreleased] — Post-Audit Fix PR-H (fix)
 
 ### Changed

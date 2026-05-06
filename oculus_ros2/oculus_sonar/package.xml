@@ -8,7 +8,7 @@
     TODO: Port sonar_image_proc and g3log_ros to ROS2 if needed.
   -->
   <name>oculus_sonar</name>
-  <version>2.0.0</version>
+  <version>2.0.1</version>
   <description>ROS2 Package to interface with a Blueprint Subsea Oculus imaging sonar</description>
 
   <maintainer email="amarburg@uw.edu">A. Marburg</maintainer>

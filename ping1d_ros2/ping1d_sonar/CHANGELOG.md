@@ -4,6 +4,14 @@ All notable changes to `ping1d_sonar` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.0.1] — Post-Audit Fix PR-M (fix, 6th audit)
+
+### Changed
+- `launch/ping_sonar.launch.py`: expose `frame_id` as a launch argument (default `ping1d_link`) and forward to the `ping1d_node` parameters. Previously the node had a working `frame_id` parameter but the launch file did not expose it, forcing manual edits (Medium, 6th audit).
+
+### Verification
+- colcon build PASS (ping1d_sonar)
+
 ## [Unreleased] — Post-Audit Fix PR-H (fix)
 
 ### Added

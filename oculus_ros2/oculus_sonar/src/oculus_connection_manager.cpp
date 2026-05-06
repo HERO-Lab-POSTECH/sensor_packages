@@ -12,13 +12,14 @@ using liboculus::SimplePingResultV2;
 
 OculusConnectionManager::OculusConnectionManager(const std::string& ip_address,
                                                  const std::string& frame_id,
-                                                 rclcpp::Logger logger)
+                                                 rclcpp::Logger logger,
+                                                 rclcpp::Clock::SharedPtr clock)
     : ip_address_(ip_address),
       frame_id_(frame_id),
       logger_(logger),
       io_srv_(),
       status_rx_(io_srv_.context()) {
-  data_rx_ = std::make_unique<PublishingDataRx>(io_srv_.context(), frame_id_);
+  data_rx_ = std::make_unique<PublishingDataRx>(io_srv_.context(), frame_id_, std::move(clock));
 }
 
 OculusConnectionManager::~OculusConnectionManager() {
