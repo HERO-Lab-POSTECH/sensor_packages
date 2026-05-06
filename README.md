@@ -10,11 +10,6 @@ This repository contains sensor driver packages optimized for marine robotics ap
 - **LiDAR Systems**: Livox driver and FAST-LIO SLAM
 - **Support Libraries**: Message definitions and communication libraries
 
-## Branch Structure
-
-- `humble-devel`: ROS2 Humble packages (Ubuntu 22.04)
-- `noetic-devel`: ROS1 Noetic packages (Ubuntu 20.04) - *in preparation*
-
 ## Package Sources and Modifications
 
 ### Modified Packages
@@ -126,7 +121,7 @@ sudo apt install ros-humble-tf2-sensor-msgs
 ### Building
 ```bash
 # Clone repository
-git clone -b humble-devel https://github.com/HERO-Lab-POSTECH/sensor_packages.git
+git clone https://github.com/HERO-Lab-POSTECH/sensor_packages.git
 cd sensor_packages
 
 # Create workspace
@@ -218,10 +213,9 @@ This ensures proper communication between publishers and subscribers across diff
 
 ### SLAM Output Topics
 - **FAST-LIO**:
-  - Odometry: `/fast_lio/odometry`
-  - Registered Cloud: `/fast_lio/cloud_registered`
-  - Map: `/fast_lio/map`
-  - Path: `/fast_lio/path`
+  - Odometry: `/localization/fast_lio/odometry`
+  - Registered Cloud (body frame): `/localization/fast_lio/points_body`
+  - Path (debug): `/fast_lio/debug/path`
 
 ## Device Configuration
 
@@ -330,9 +324,7 @@ curl http://192.168.0.203:8000/api/v1/status
 
 ## Contributing
 
-Contributions are welcome! Please submit Pull Requests to the appropriate branch:
-- `humble-devel`: ROS2 Humble changes
-- `noetic-devel`: ROS1 Noetic changes
+Contributions are welcome! Please submit Pull Requests against `main`.
 
 ## License
 
