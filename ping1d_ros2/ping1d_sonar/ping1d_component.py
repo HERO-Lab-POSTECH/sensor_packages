@@ -23,11 +23,12 @@
 #-----------------------------------------------------------------------------------
 
 from rclpy.node import Node
-from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 from sensor_msgs.msg import Range
 from std_msgs.msg import Float32
 
 from rcl_interfaces.msg import SetParametersResult
+
+from ping1d_sonar.qos import SENSOR_QOS
 
 # from brping import Ping1D
 import importlib
@@ -38,12 +39,7 @@ class Ping1dComponent(Node):
   def __init__(self):
     super().__init__("ping1d_node")
 
-    # BEST_EFFORT QoS with depth 10 for sensor data
-    sensor_qos = QoSProfile(
-        reliability=ReliabilityPolicy.BEST_EFFORT,
-        history=HistoryPolicy.KEEP_LAST,
-        depth=10
-    )
+    sensor_qos = SENSOR_QOS
 
     # Publishers with BEST_EFFORT QoS
     self.publisher_ = self.create_publisher(Range, "/sensor/sonar/ping1d/range", sensor_qos)

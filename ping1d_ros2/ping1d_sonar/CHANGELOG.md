@@ -4,6 +4,17 @@ All notable changes to `ping1d_sonar` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased] — Post-Audit Fix PR-H (fix)
+
+### Added
+- `package.xml`: `<depend>` entries for `rclpy`, `sensor_msgs`, `std_msgs`, `rcl_interfaces` (4th audit Critical: previously declared as test-only deps; clean `rosdep install --from-paths src` would not pull them).
+
+### Changed
+- `ping1d_sonar/ping1d_component.py`: replaced inline `QoSProfile(BEST_EFFORT, KEEP_LAST, depth=10)` with the workspace-standard `SENSOR_QOS` (depth=5) imported from `ping1d_sonar.qos`. Aligns with §2.4 spec; matches `range_pub_component.py` pattern.
+
+### Verification
+- colcon build PASS
+
 ## [Unreleased] — Phase P5a: Launch arg standardization (refactor)
 
 ### Changed
