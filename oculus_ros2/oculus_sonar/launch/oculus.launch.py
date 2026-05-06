@@ -15,6 +15,7 @@ Arguments:
   apply_colormap : Apply colormap to fan image                 (default: true)
   colormap       : Colormap name (jet, hot, viridis, turbo...) (default: 'turbo')
   qos_reliability: Fan imager subscriber QoS reliability       (default: 'best_effort')
+  use_sim_time   : Honor /clock during bag replay              (default: false)
 
 Empty string ('') for an override means "fall back to YAML config default".
 Container assembly is delegated to `_oculus_common.py`.
@@ -90,6 +91,7 @@ def _collect_fan_imager_overrides(context, model: str) -> dict:
 def launch_setup(context, *_args, **_kwargs):
     model = LaunchConfiguration('sonar_model').perform(context)
     with_fan = LaunchConfiguration('with_fan').perform(context).lower() == 'true'
+    use_sim_time = LaunchConfiguration('use_sim_time').perform(context).lower() == 'true'
 
     driver_overrides = _collect_driver_overrides(context)
     fan_imager_overrides = _collect_fan_imager_overrides(context, model) if with_fan else {}
@@ -99,6 +101,7 @@ def launch_setup(context, *_args, **_kwargs):
         with_fan=with_fan,
         driver_overrides=driver_overrides,
         fan_imager_overrides=fan_imager_overrides,
+        use_sim_time=use_sim_time,
     )
     return [container]
 
@@ -135,6 +138,10 @@ def generate_launch_description():
                                           'inferno, ocean, rainbow, etc.'),
         DeclareLaunchArgument('qos_reliability', default_value='best_effort',
                               description='QoS reliability for subscriber: reliable or best_effort'),
+
+        # Clock source (true = honor /clock during bag replay)
+        DeclareLaunchArgument('use_sim_time', default_value='false',
+                              description='Honor /clock during bag replay.'),
 
         OpaqueFunction(function=launch_setup),
     ])

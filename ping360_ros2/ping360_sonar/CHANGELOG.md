@@ -4,6 +4,14 @@ All notable changes to `ping360_sonar` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.0.3] — Post-Audit Fix PR-Q (fix, 8th audit)
+
+### Added
+- `launch/ping360.launch.py`: expose `use_sim_time` launch argument (default `false`); forwarded to the `ping360` node parameters so the driver honors `/clock` during bag replay (High Q-1, 8th audit).
+
+### Verification
+- colcon build PASS (ping360_sonar)
+
 ## [2.0.2] — Post-Audit Fix PR-M (fix, 6th audit)
 
 ### Fixed

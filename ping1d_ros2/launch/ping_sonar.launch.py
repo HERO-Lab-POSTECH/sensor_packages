@@ -10,6 +10,7 @@ Arguments:
   scan_length    : Scan length in mm (2000-10000)              (default: 3000)
   mode_auto      : Auto mode: 0=manual, 1=auto                 (default: 0)
   use_rviz       : Launch RViz for visualization               (default: true)
+  use_sim_time   : Honor /clock during bag replay              (default: false)
 
 Examples:
   ros2 launch ping1d_sonar ping_sonar.launch.py
@@ -18,12 +19,14 @@ Examples:
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 
 from launch_ros.actions import Node
 
 
 def generate_launch_description():
+
+    use_sim_time = LaunchConfiguration('use_sim_time')
 
     ping1d_node = Node(
         package='ping1d_sonar',
@@ -38,6 +41,9 @@ def generate_launch_description():
             'scan_lenght': LaunchConfiguration('scan_length'),
             'mode_auto': LaunchConfiguration('mode_auto'),
             'frame_id': LaunchConfiguration('frame_id'),
+            'use_sim_time': PythonExpression([
+                "'", use_sim_time, "' == 'true'",
+            ]),
         }]
     )
 
@@ -95,6 +101,11 @@ def generate_launch_description():
             'frame_id',
             default_value='ping1d_link',
             description='Frame ID for Ping1D sonar message headers'
+        ),
+        DeclareLaunchArgument(
+            'use_sim_time',
+            default_value='false',
+            description='Honor /clock during bag replay.'
         ),
         # Nodes
         ping1d_node,

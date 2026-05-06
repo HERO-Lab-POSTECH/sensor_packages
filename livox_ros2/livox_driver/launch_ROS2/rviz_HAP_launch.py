@@ -1,6 +1,8 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
 import launch
 
@@ -35,12 +37,23 @@ livox_ros2_params = [
 
 
 def generate_launch_description():
+    use_sim_time_arg = DeclareLaunchArgument(
+        'use_sim_time',
+        default_value='false',
+        description='Honor /clock during bag replay.',
+    )
+    use_sim_time_param = {
+        'use_sim_time': PythonExpression([
+            "'", LaunchConfiguration('use_sim_time'), "' == 'true'",
+        ]),
+    }
+
     livox_driver = Node(
         package='livox_driver',
         executable='livox_driver_node',
         name='livox_lidar_publisher',
         output='screen',
-        parameters=livox_ros2_params
+        parameters=livox_ros2_params + [use_sim_time_param]
         )
 
     livox_rviz = Node(
@@ -51,6 +64,7 @@ def generate_launch_description():
         )
 
     return LaunchDescription([
+        use_sim_time_arg,
         livox_driver,
         livox_rviz,
         # launch.actions.RegisterEventHandler(

@@ -2,6 +2,15 @@
 
 All notable changes to `oculus_sonar` will be documented in this file.
 
+## [2.0.2] — Post-Audit Fix PR-Q (fix, 8th audit)
+
+### Added
+- `launch/oculus.launch.py`: expose `use_sim_time` launch argument (default `false`); forwarded to every composable node in the container so the driver and fan_imager honor `/clock` during bag replay (High Q-1, 8th audit).
+- `launch/_oculus_common.py`: `make_sonar_container` accepts a `use_sim_time` keyword arg and attaches `{'use_sim_time': ...}` to driver and fan_imager `ComposableNode` parameters.
+
+### Verification
+- colcon build PASS (oculus_sonar)
+
 ## [2.0.1] — Post-Audit Fix PR-M (fix, 6th audit)
 
 ### Fixed

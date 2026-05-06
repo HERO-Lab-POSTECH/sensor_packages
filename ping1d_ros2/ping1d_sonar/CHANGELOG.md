@@ -4,6 +4,17 @@ All notable changes to `ping1d_sonar` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.0.2] — Post-Audit Fix PR-Q (fix, 8th audit)
+
+### Added
+- `launch/ping_sonar.launch.py`: expose `use_sim_time` launch argument (default `false`); forwarded to the `ping1d_node` parameters so the driver honors `/clock` during bag replay (High Q-1, 8th audit).
+
+### Fixed
+- `setup.py`: bump `version` from `0.0.0` to `0.0.2` to track `package.xml` (PR-M raised `package.xml` to 0.0.1 but left `setup.py` stale; this PR resyncs and bumps both to 0.0.2 — Medium Q-2, 8th audit).
+
+### Verification
+- colcon build PASS (ping1d_sonar)
+
 ## [0.0.1] — Post-Audit Fix PR-M (fix, 6th audit)
 
 ### Changed

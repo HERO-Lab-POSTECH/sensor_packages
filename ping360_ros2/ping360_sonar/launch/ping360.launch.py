@@ -8,6 +8,7 @@ Arguments:
   connection_type  : Connection type: serial or udp            (default: udp)
   udp_address      : UDP address (only for udp connection)     (default: '192.168.0.202')
   udp_port         : UDP port (only for udp connection)        (default: 12345)
+  use_sim_time     : Honor /clock during bag replay            (default: false)
 
 Examples:
   ros2 launch ping360_sonar ping360.launch.py
@@ -28,6 +29,7 @@ def launch_setup(context, *args, **kwargs):
     udp_address = LaunchConfiguration('udp_address').perform(context)
     udp_port = int(LaunchConfiguration('udp_port').perform(context))
     frame_id = LaunchConfiguration('frame_id').perform(context)
+    use_sim_time = LaunchConfiguration('use_sim_time').perform(context).lower() == 'true'
 
     executable = 'ping360.py' if node_type == 'python' else 'ping360_node'
     return [
@@ -42,6 +44,7 @@ def launch_setup(context, *args, **kwargs):
                 'udp_address': udp_address,
                 'udp_port': udp_port,
                 'frame': frame_id,
+                'use_sim_time': use_sim_time,
             }],
             output='screen'
         )
@@ -84,5 +87,10 @@ def generate_launch_description():
             default_value='ping360_link',
             description='Frame ID for Ping360 sonar message headers'
         ),
+        DeclareLaunchArgument(
+            'use_sim_time',
+            default_value='false',
+            description='Honor /clock during bag replay.'
+        ),
         OpaqueFunction(function=launch_setup)
-    ]) 
+    ])

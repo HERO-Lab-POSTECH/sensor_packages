@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] — Post-Audit Fix PR-Q (fix, 8th audit)
+
+### Added
+- `launch_ROS2/{msg,rviz}_{MID360,HAP}_launch.py` + `rviz_mixed.py` (5 files): expose `use_sim_time` launch argument (default `false`); appended to `livox_ros2_params` so the `livox_driver_node` honors `/clock` during bag replay (High Q-1, 8th audit).
+
+### Verification
+- colcon build PASS (livox_driver)
+
 ## [1.0.1] — Post-Audit Fix PR-M (fix, 6th audit)
 
 ### Fixed

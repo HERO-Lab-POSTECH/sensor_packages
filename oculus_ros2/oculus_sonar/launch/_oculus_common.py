@@ -49,6 +49,7 @@ def make_sonar_container(
     fan_imager_overrides: dict,
     *,
     container_name: Optional[str] = None,
+    use_sim_time: bool = False,
 ) -> ComposableNodeContainer:
     """Build the ComposableNodeContainer holding the OculusDriver and
     (optionally) the OculusFanImager.
@@ -64,10 +65,14 @@ def make_sonar_container(
             Optional: 'freq_mode'.
         container_name: Override the auto-generated container node name.
             Defaults to f'oculus_{model}_container'.
+        use_sim_time: When True, attach ``{'use_sim_time': True}`` to every
+            composable node so it honors ``/clock`` during bag replay.
     """
     config_file = sonar_model_to_config_path(model)
 
-    driver_params: list[Union[str, dict]] = [config_file]
+    sim_time_param: dict = {'use_sim_time': use_sim_time}
+
+    driver_params: list[Union[str, dict]] = [config_file, sim_time_param]
     if driver_overrides:
         driver_params.append(driver_overrides)
 
@@ -82,7 +87,7 @@ def make_sonar_container(
     ]
 
     if with_fan:
-        fan_params: list[Union[str, dict]] = [config_file]
+        fan_params: list[Union[str, dict]] = [config_file, sim_time_param]
         if fan_imager_overrides:
             fan_params.append(fan_imager_overrides)
         composable_nodes.append(
