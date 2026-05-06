@@ -2,6 +2,14 @@
 
 All notable changes to `oculus_sonar` will be documented in this file.
 
+## [Unreleased] — Post-Audit Fix PR-H (fix)
+
+### Changed
+- `src/oculus_fan_imager.cpp`: subscriber QoS default reordered. Previously `rclcpp::QoS(10)` (RELIABLE) was constructed first and only replaced when `qos_reliability:=best_effort`. Now `SensorDataQoS()` is the default and only replaced when `qos_reliability:=reliable`. Matches the upstream `/sensor/sonar/oculus/<model>/sonar` publisher (BEST_EFFORT). The declared parameter default is already `best_effort`, so runtime behavior is unchanged when params come from declared defaults — but a manual `unset` path is now safe (4th audit High).
+
+### Verification
+- colcon build PASS
+
 ## [Unreleased] — Phase P6: Config structure (refactor)
 
 ### Changed

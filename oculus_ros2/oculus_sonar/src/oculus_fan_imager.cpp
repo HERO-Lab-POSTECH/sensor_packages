@@ -67,16 +67,17 @@ void OculusFanImager::init() {
     polar_converter_->setColormap(colormap_name_);
   }
 
-  // Create subscriber for SonarImage messages
-  // Default: RELIABLE QoS, can be changed to BEST_EFFORT via qos_reliability parameter
+  // Create subscriber for SonarImage messages.
+  // Upstream `/sensor/sonar/oculus/<model>/sonar` publishes with SensorDataQoS
+  // (BEST_EFFORT). Default the subscriber to BEST_EFFORT to match; allow
+  // RELIABLE only when explicitly requested via parameter.
   std::string qos_reliability = this->get_parameter("qos_reliability").as_string();
-  rclcpp::QoS qos(10);
-  if (qos_reliability == "best_effort") {
-    qos = rclcpp::SensorDataQoS();
-    RCLCPP_INFO(this->get_logger(), "  QoS reliability: BEST_EFFORT");
-  } else {
-    // Default: RELIABLE
+  rclcpp::QoS qos = rclcpp::SensorDataQoS();
+  if (qos_reliability == "reliable") {
+    qos = rclcpp::QoS(10);
     RCLCPP_INFO(this->get_logger(), "  QoS reliability: RELIABLE");
+  } else {
+    RCLCPP_INFO(this->get_logger(), "  QoS reliability: BEST_EFFORT");
   }
   sonar_sub_ = this->create_subscription<marine_acoustic_msgs::msg::SonarImage>(
     input_topic_, qos,
