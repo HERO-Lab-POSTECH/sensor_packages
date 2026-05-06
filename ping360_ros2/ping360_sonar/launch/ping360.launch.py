@@ -27,7 +27,8 @@ def launch_setup(context, *args, **kwargs):
     connection_type = LaunchConfiguration('connection_type').perform(context)
     udp_address = LaunchConfiguration('udp_address').perform(context)
     udp_port = int(LaunchConfiguration('udp_port').perform(context))
-    
+    frame_id = LaunchConfiguration('frame_id').perform(context)
+
     executable = 'ping360.py' if node_type == 'python' else 'ping360_node'
     return [
         Node(
@@ -39,7 +40,8 @@ def launch_setup(context, *args, **kwargs):
                 'baudrate': baudrate,
                 'connection_type': connection_type,
                 'udp_address': udp_address,
-                'udp_port': udp_port
+                'udp_port': udp_port,
+                'frame': frame_id,
             }],
             output='screen'
         )
@@ -76,6 +78,11 @@ def generate_launch_description():
             'udp_port',
             default_value='12345',
             description='UDP port (only for udp connection)'
+        ),
+        DeclareLaunchArgument(
+            'frame_id',
+            default_value='ping360_link',
+            description='Frame ID for Ping360 sonar message headers'
         ),
         OpaqueFunction(function=launch_setup)
     ]) 

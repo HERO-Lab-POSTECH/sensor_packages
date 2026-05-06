@@ -17,6 +17,8 @@ Examples:
 
 from launch_ros.actions import Node
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
@@ -29,11 +31,18 @@ def generate_launch_description():
     # QoS Config
     reliability = 'best_effort'
 
+    frame_id_arg = DeclareLaunchArgument(
+        'frame_id',
+        default_value='sonoptix_link',
+        description='Frame ID for Sonoptix Echo message headers',
+    )
+
     echo_data = Node(package='sonoptix_ros2',
                      executable='echo',
                      parameters=[{
                          'topic': data_topic,
                          'range': sonar_range,
+                         'frame_id': LaunchConfiguration('frame_id'),
                          f'qos_overrides.{data_topic}.publisher.reliability': reliability
                      }],
                      output='screen')
@@ -64,4 +73,4 @@ def generate_launch_description():
     #                    output='screen')
 
     # return LaunchDescription([echo_data, echo_transport, echo_imager])
-    return LaunchDescription([echo_data, echo_transport])
+    return LaunchDescription([frame_id_arg, echo_data, echo_transport])

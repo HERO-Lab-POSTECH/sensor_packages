@@ -25,9 +25,11 @@ class PublishingDataRx : public liboculus::DataRx {
    * @brief Constructor.
    * @param iosrv Shared pointer to IO service context.
    * @param frame_id Frame ID for message headers.
+   * @param clock Clock used for header.stamp (must honor use_sim_time when bag-replaying).
    */
   PublishingDataRx(const liboculus::IoServiceThread::IoContextPtr &iosrv,
-                   const std::string &frame_id);
+                   const std::string &frame_id,
+                   rclcpp::Clock::SharedPtr clock);
 
   /**
    * @brief Destructor.

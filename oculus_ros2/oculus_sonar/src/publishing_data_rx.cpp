@@ -11,10 +11,11 @@
 namespace oculus_sonar {
 
 PublishingDataRx::PublishingDataRx(const liboculus::IoServiceThread::IoContextPtr &iosrv,
-                                   const std::string &frame_id)
+                                   const std::string &frame_id,
+                                   rclcpp::Clock::SharedPtr clock)
     : liboculus::DataRx(iosrv),
       raw_data_pub_(nullptr),
-      clock_(std::make_shared<rclcpp::Clock>()),
+      clock_(std::move(clock)),
       frame_id_(frame_id) {
 }
 

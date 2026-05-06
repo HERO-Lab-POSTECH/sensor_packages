@@ -48,6 +48,8 @@ from rclpy.serialization import deserialize_message
 from rosidl_runtime_py.utilities import get_message
 import numpy as np
 
+from sonoptix_ros2.qos import SENSOR_QOS
+
 
 class EchoImager(Node):
     """
@@ -84,8 +86,6 @@ class EchoImager(Node):
                 qos.QoSPolicyKind.RELIABILITY,
                 )
         )
-        SENSOR_QOS = rclpy.qos.qos_profile_sensor_data
-
         # Handle parameter updates
         self.add_on_set_parameters_callback(self.set_param_callback)
 

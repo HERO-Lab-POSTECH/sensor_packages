@@ -39,7 +39,7 @@ void OculusDriver::init() {
   publishers_->initialize();
 
   connection_ = std::make_unique<OculusConnectionManager>(
-      config_->ip_address(), config_->frame_id(), this->get_logger());
+      config_->ip_address(), config_->frame_id(), this->get_logger(), this->get_clock());
 
   connection_->setRawPublisher(publishers_->raw_data_publisher());
 

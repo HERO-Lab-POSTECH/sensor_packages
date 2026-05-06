@@ -36,7 +36,8 @@ def generate_launch_description():
             'gain_num': LaunchConfiguration('gain'),
             'scan_start': LaunchConfiguration('scan_start'),
             'scan_lenght': LaunchConfiguration('scan_length'),
-            'mode_auto': LaunchConfiguration('mode_auto')
+            'mode_auto': LaunchConfiguration('mode_auto'),
+            'frame_id': LaunchConfiguration('frame_id'),
         }]
     )
 
@@ -89,6 +90,11 @@ def generate_launch_description():
             'use_rviz',
             default_value='true',
             description='Launch RViz for visualization'
+        ),
+        DeclareLaunchArgument(
+            'frame_id',
+            default_value='ping1d_link',
+            description='Frame ID for Ping1D sonar message headers'
         ),
         # Nodes
         ping1d_node,

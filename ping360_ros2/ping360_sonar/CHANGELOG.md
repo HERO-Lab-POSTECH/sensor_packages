@@ -4,6 +4,17 @@ All notable changes to `ping360_sonar` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.0.2] — Post-Audit Fix PR-M (fix, 6th audit)
+
+### Fixed
+- `src/ping360_node.cpp`: image publish timer migrated from `create_wall_timer` to `rclcpp::create_timer(this, get_clock(), ...)` so the timer honors `use_sim_time` during bag replay (High, 6th audit).
+
+### Changed
+- `launch/ping360.launch.py`: expose `frame_id` as a launch argument (default `ping360_link`); previously it was a node-internal hardcoded default with no override (Medium, 6th audit).
+
+### Verification
+- colcon build PASS (ping360_sonar)
+
 ## [Unreleased] — Phase P5a: Launch arg standardization (refactor)
 
 ### Changed
