@@ -18,7 +18,7 @@ Examples:
 from launch_ros.actions import Node
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 
 
 def generate_launch_description():
@@ -36,6 +36,14 @@ def generate_launch_description():
         default_value='sonoptix_link',
         description='Frame ID for Sonoptix Echo message headers',
     )
+    use_sim_time_arg = DeclareLaunchArgument(
+        'use_sim_time',
+        default_value='false',
+        description='Honor /clock during bag replay.',
+    )
+    use_sim_time_expr = PythonExpression([
+        "'", LaunchConfiguration('use_sim_time'), "' == 'true'",
+    ])
 
     echo_data = Node(package='sonoptix_ros2',
                      executable='echo',
@@ -43,6 +51,7 @@ def generate_launch_description():
                          'topic': data_topic,
                          'range': sonar_range,
                          'frame_id': LaunchConfiguration('frame_id'),
+                         'use_sim_time': use_sim_time_expr,
                          f'qos_overrides.{data_topic}.publisher.reliability': reliability
                      }],
                      output='screen')
@@ -56,6 +65,7 @@ def generate_launch_description():
                           parameters=[{
                               'out.compressed.format': 'png',
                               'out.compressed.png_level': compression_level,
+                              'use_sim_time': use_sim_time_expr,
                               f'qos_overrides.in.subscription.reliability': reliability,
                               f'qos_overrides.{compressed_topic}.publisher.reliability': reliability
                           }],
@@ -73,4 +83,4 @@ def generate_launch_description():
     #                    output='screen')
 
     # return LaunchDescription([echo_data, echo_transport, echo_imager])
-    return LaunchDescription([frame_id_arg, echo_data, echo_transport])
+    return LaunchDescription([frame_id_arg, use_sim_time_arg, echo_data, echo_transport])

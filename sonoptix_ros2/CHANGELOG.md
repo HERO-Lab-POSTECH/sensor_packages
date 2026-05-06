@@ -4,6 +4,17 @@ All notable changes to `sonoptix_ros2` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.0.4] — Post-Audit Fix PR-Q (fix, 8th audit)
+
+### Added
+- `launch/echo.launch.py`: expose `use_sim_time` launch argument (default `false`); forwarded to the `echo` driver and the `echo_transport` republisher so both honor `/clock` during bag replay (High Q-1, 8th audit). `echo_decompress.launch.py` is consumer-side and out of scope.
+
+### Fixed
+- `setup.py`: bump `version` from `0.0.2` to `0.0.4` to track `package.xml` (PR-M raised `package.xml` to 0.0.3 but left `setup.py` stale; this PR resyncs and bumps both to 0.0.4 — Medium Q-2, 8th audit).
+
+### Verification
+- colcon build PASS (sonoptix_ros2)
+
 ## [0.0.3] — Post-Audit Fix PR-M (fix, 6th audit)
 
 ### Fixed

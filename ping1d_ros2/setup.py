@@ -46,7 +46,7 @@ data_files = package_files('rviz/', data_files)
 
 setup(
     name=package_name,
-    version='0.0.0',
+    version='0.0.2',
     packages=[package_name, submodules],
     data_files=data_files,
     install_requires=['setuptools'],
