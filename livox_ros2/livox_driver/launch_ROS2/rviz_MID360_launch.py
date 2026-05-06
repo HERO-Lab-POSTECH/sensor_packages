@@ -29,7 +29,7 @@ livox_ros2_params = [
     {"publish_freq": publish_freq},
     {"output_data_type": output_type},
     {"frame_id": frame_id},
-    {"imu_frame_id": ""},
+    {"imu_frame_id": "imu_link"},
     {"lvx_file_path": lvx_file_path},
     {"user_config_path": user_config_path},
     {"cmdline_input_bd_code": cmdline_bd_code}

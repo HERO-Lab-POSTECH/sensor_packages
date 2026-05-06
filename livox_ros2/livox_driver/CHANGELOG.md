@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.3] — Post-Audit Fix PR-S (fix, 8th audit)
+
+### Changed
+- `launch_ROS2/{msg,rviz}_{MID360,HAP}_launch.py` + `rviz_mixed.py` (5 files): set `imu_frame_id="imu_link"` (was empty → fallback to `frame_id="livox_link"`). Aligns IMU `header.frame_id` with the `imu_link` defined in `boat_description/urdf/boat.urdf`, per REP-105 (Medium S-1, 8th audit). Behavior unchanged for fast_lio (frame_id ignored), but RViz / TF tooling now resolve IMU pose correctly.
+
+### Verification
+- colcon build PASS (livox_driver)
+
 ## [1.0.2] — Post-Audit Fix PR-Q (fix, 8th audit)
 
 ### Added
