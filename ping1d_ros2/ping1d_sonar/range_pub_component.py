@@ -26,11 +26,21 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import Range
 
+
 class RangePublisher(Node):
+    """Test/simulation-only Range publisher emitting a fixed 1.5 m value at 1 Hz.
+
+    Publishes to `/sensor/sonar/ping1d/range_test` (NOT the real driver topic
+    `/sensor/sonar/ping1d/range`) to avoid colliding with `Ping1dComponent`
+    when both happen to be launched. Used for downstream subscriber smoke
+    tests when no physical Ping1d device is connected.
+    """
+
     def __init__(self):
-        super().__init__("range_publisher")
+        super().__init__("range_publisher_test")
         # Use sensor QoS for consistency across packages (BEST_EFFORT, KEEP_LAST)
-        self.publisher_ = self.create_publisher(Range, "/sensor/sonar/ping1d/range", qos_profile_sensor_data)
+        self.publisher_ = self.create_publisher(
+            Range, "/sensor/sonar/ping1d/range_test", qos_profile_sensor_data)
         self.timer_ = self.create_timer(1.0, self.publish_range)
         self.declare_parameter('frame_id', 'ping1d_link')
         self.frame_id: str = self.get_parameter('frame_id').value

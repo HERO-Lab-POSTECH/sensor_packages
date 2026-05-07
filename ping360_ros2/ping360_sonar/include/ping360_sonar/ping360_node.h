@@ -99,6 +99,10 @@ private:
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr gain_pub;
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr frequency_pub;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr range_max_pub;
+  // Alias of `range_max` published as `param/range` so generic downstream
+  // consumers (sonar_3d_reconstruction's range_topic auto-deriver) match the
+  // oculus convention `<sonar_topic_root>/param/range`.
+  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr range_pub;
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr angle_sector_pub;
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr angle_step_pub;
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr speed_of_sound_pub;

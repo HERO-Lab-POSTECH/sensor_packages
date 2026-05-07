@@ -4,6 +4,22 @@ All notable changes to `ping360_sonar` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.0.4] — 2026-05-07 (patch)
+
+### Added
+- `/sensor/sonar/ping360/param/range` (std_msgs/Float32, LATCHED) — alias of the existing `/sensor/sonar/ping360/param/range_max`. Republishes the configured `range_max` value at every parameter-publish tick so generic downstream consumers that derive `range_topic` from the sonar topic root (oculus convention `<prefix>/param/range`) match without ping360-specific special-casing.
+
+### Fixed
+- `sonar_3d_reconstruction.scripts.3d_mapper_node` previously auto-derived `range_topic = <sonar_topic_root>/param/range`, which silently produced `/sensor/sonar/ping360/param/range` — a topic that did not exist. The mapper's `range_sub` therefore never received a value when launched with `sonar:=ping360`, even though `range_max` (the same data) was being published. The new `range_pub` closes that gap without requiring the mapper to know about ping360 specifically.
+
+### Notes
+- New publisher uses LATCHED QoS (RELIABLE + TRANSIENT_LOCAL + KeepLast(1)) so a late-joining mapper still receives the most recent range value. The original `/param/range_max` keeps its sensor QoS for backward compatibility with existing logging/recording subscribers.
+- Header `ping360_node.h` adds the `range_pub` member; `ping360_node.cpp` creates it next to `range_max_pub` and republishes `range_max_msg` on the alias inside `publishParameters()` (one extra publish per tick, identical payload).
+
+### Verification
+- grep `/sensor/sonar/ping360/param/range` (publishers) → 2 hits (`range_max` and the new `range` alias).
+- colcon build PASS (ping360_sonar).
+
 ## [2.0.3] — Post-Audit Fix PR-Q (fix, 8th audit)
 
 ### Added

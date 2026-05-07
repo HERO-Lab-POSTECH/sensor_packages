@@ -213,9 +213,9 @@ This ensures proper communication between publishers and subscribers across diff
 
 ### SLAM Output Topics
 - **FAST-LIO**:
-  - Odometry: `/localization/fast_lio/odometry`
-  - Registered Cloud (body frame): `/localization/fast_lio/points_body`
-  - Path (debug): `/fast_lio/debug/path`
+  - Odometry: `/slam/fast_lio/odometry`
+  - Registered Cloud (body frame): `/slam/fast_lio/points_body`
+  - Path (debug): `/slam/fast_lio/debug/path`
 
 ## Device Configuration
 

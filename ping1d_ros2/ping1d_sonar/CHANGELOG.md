@@ -4,6 +4,19 @@ All notable changes to `ping1d_sonar` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.0.3] — 2026-05-07 (patch)
+
+### Fixed
+- `range_pub_component.py`: dummy publisher now emits to `/sensor/sonar/ping1d/range_test` (and registers as node `range_publisher_test`) instead of colliding with the real driver topic `/sensor/sonar/ping1d/range`. If a user accidentally launched both `ros2 run ping1d_sonar ping1d_node` and `ros2 run ping1d_sonar range_node` at the same time, downstream subscribers received a mix of real (~0.1s cycle) and dummy (1s cycle, fixed 1.5 m) messages. Now the two streams are isolated and the dummy is clearly named for what it is — a smoke-test producer for downstream nodes when no Ping1d device is connected.
+- Docstring added explaining the dummy nature and topic separation.
+
+### Notes
+- No schema or QoS changes. Both publishers still use `qos_profile_sensor_data` (BEST_EFFORT, KEEP_LAST 5).
+- Downstream consumers that explicitly subscribed to `/sensor/sonar/ping1d/range_test` (none known in the workspace) would need to update; the real-driver topic name is unchanged.
+
+### Verification
+- grep `/sensor/sonar/ping1d/range\b` (publishers only) → exactly 1 hit (`ping1d_component.py`).
+
 ## [0.0.2] — Post-Audit Fix PR-Q (fix, 8th audit)
 
 ### Added

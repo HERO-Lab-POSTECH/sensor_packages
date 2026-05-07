@@ -118,6 +118,12 @@ void Ping360Sonar::initPublishers(bool image, bool scan, bool echo)
     gain_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/gain", qos);
     frequency_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/frequency", qos);
     range_max_pub = create_publisher<std_msgs::msg::Float32>("/sensor/sonar/ping360/param/range_max", qos);
+    // Alias of range_max for downstream consumers that expect <prefix>/param/range
+    // (oculus pattern). LATCHED so late subscribers (e.g. sonar_3d_reconstruction
+    // started after ping360) still receive the configured value.
+    range_pub = create_publisher<std_msgs::msg::Float32>(
+        "/sensor/sonar/ping360/param/range",
+        rclcpp::QoS(1).transient_local());
     angle_sector_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/angle_sector", qos);
     angle_step_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/angle_step", qos);
     speed_of_sound_pub = create_publisher<std_msgs::msg::Int32>("/sensor/sonar/ping360/param/speed_of_sound", qos);
@@ -295,6 +301,7 @@ void Ping360Sonar::publishParameters()
   std_msgs::msg::Float32 range_max_msg;
   range_max_msg.data = static_cast<float>(get_parameter("range_max").as_int());
   range_max_pub->publish(range_max_msg);
+  range_pub->publish(range_max_msg);  // alias on /param/range
   
   std_msgs::msg::Int32 angle_sector_msg;
   angle_sector_msg.data = get_parameter("angle_sector").as_int();
